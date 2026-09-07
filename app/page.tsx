@@ -1,69 +1,98 @@
-import Image from "next/image";
+import { MapPin, Clock, ShieldCheck } from "lucide-react";
+import { BookingWidget } from "@/components/booking-widget";
+import { Card } from "@/components/ui/card";
+import { LOCATION, SIZES } from "@/lib/config";
+import { countAvailable } from "@/lib/data/bookings";
+import { formatVnd } from "@/lib/money";
+import type { LockerSize } from "@/lib/types";
 
-export default function Home() {
+// Availability is read per request from the booking store, so this page must
+// not be prerendered at build time (where the store is always empty).
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  // Availability for the next 24h, so sold-out sizes are visible up front.
+  // The booking action re-checks authoritatively for the chosen period.
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const availability: Partial<Record<LockerSize, number>> = {};
+  for (const size of SIZES) {
+    availability[size.id] = await countAvailable(
+      size.id,
+      now.toISOString(),
+      tomorrow.toISOString()
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="flex-1">
+      <div className="mx-auto max-w-5xl px-6 py-12 lg:py-16">
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+          <div>
+            <h1 className="text-4xl font-semibold tracking-tight text-balance">
+              Drop your bags in Bui Vien. Explore hands-free.
+            </h1>
+            <p className="text-muted-foreground mt-4 text-lg">
+              Secure luggage storage at {LOCATION.name} — by the hour, day, or
+              week. Pay only for the time you use.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              {[
+                [MapPin, LOCATION.address],
+                [Clock, LOCATION.hours],
+                [ShieldCheck, "Sealed, monitored storage. Reference code at pickup."],
+              ].map(([Icon, text], i) => {
+                const IconComponent = Icon as typeof MapPin;
+                return (
+                  <p key={i} className="text-muted-foreground flex items-center gap-2.5 text-sm">
+                    <IconComponent className="text-brand size-4 shrink-0" />
+                    {text as string}
+                  </p>
+                );
+              })}
+            </div>
+
+            <Card className="mt-8 p-6">
+              <h2 className="font-semibold">Luggage storage price</h2>
+              <table className="mt-4 w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-left">
+                    <th className="pb-2 font-normal">Type</th>
+                    <th className="pb-2 text-right font-normal">Hour</th>
+                    <th className="pb-2 text-right font-normal">Day</th>
+                    <th className="pb-2 text-right font-normal">Week</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {SIZES.map((s) => (
+                    <tr key={s.id} className="border-t">
+                      <td className="py-2.5 font-medium">{s.label}</td>
+                      <td className="py-2.5 text-right tabular-nums">
+                        {formatVnd(s.hourly)}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums">
+                        {formatVnd(s.daily)}
+                      </td>
+                      <td className="py-2.5 text-right tabular-nums">
+                        {formatVnd(s.weekly)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="text-muted-foreground mt-3 text-xs">
+                Longer stays are billed at the better rate automatically — a
+                9-day stay costs a week plus two days, never nine days.
+              </p>
+            </Card>
+          </div>
+
+          <div className="lg:sticky lg:top-8">
+            <BookingWidget availability={availability} />
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

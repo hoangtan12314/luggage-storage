@@ -1,0 +1,62 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
+import { OrderSummary } from "@/components/order-summary";
+import { Card } from "@/components/ui/card";
+import { LOCATION } from "@/lib/config";
+import { findByRef } from "@/lib/data/bookings";
+import { quote } from "@/lib/pricing";
+
+export default async function BookingConfirmationPage(
+  props: PageProps<"/booking/[ref]">
+) {
+  const { ref } = await props.params;
+  const booking = await findByRef(ref);
+
+  if (!booking) {
+    notFound();
+  }
+
+  // Re-derive the breakdown from the stored items so the confirmation shows
+  // the same itemization as checkout. The stored total remains authoritative.
+  const priced = quote(booking.items, booking.start, booking.end);
+
+  return (
+    <main className="flex-1">
+      <div className="mx-auto max-w-lg px-6 py-12">
+        <div className="text-center">
+          <CheckCircle2 className="text-brand mx-auto size-10" />
+          <p className="text-brand mt-2 text-sm font-medium">Booking confirmed</p>
+          <h1 className="mt-1 font-mono text-3xl font-bold tracking-tight">
+            {booking.ref}
+          </h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Show this reference code at drop-off and pickup.
+          </p>
+        </div>
+
+        <Card className="mt-8 p-6">
+          <OrderSummary quote={priced} />
+        </Card>
+
+        <Card className="mt-4 p-6">
+          <h2 className="font-semibold">{LOCATION.name}</h2>
+          <p className="text-muted-foreground mt-1 text-sm">{LOCATION.address}</p>
+          <p className="text-muted-foreground text-sm">{LOCATION.hours}</p>
+          <a
+            href={`tel:${LOCATION.phone.replace(/\s/g, "")}`}
+            className="text-brand mt-2 inline-block text-sm hover:underline"
+          >
+            {LOCATION.phone}
+          </a>
+        </Card>
+
+        <p className="mt-8 text-center">
+          <Link href="/" className="text-brand hover:underline">
+            ← Book another locker
+          </Link>
+        </p>
+      </div>
+    </main>
+  );
+}

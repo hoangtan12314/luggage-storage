@@ -1,13 +1,40 @@
 import type { LockerSize } from "./types";
 
+// The single source of truth for the site's canonical URL. Everything that
+// needs an absolute URL (metadata, sitemap, robots.txt, JSON-LD) reads this,
+// so there is exactly one place to update once a real domain exists.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export const LOCATION = {
   name: "Ngõ Saigon Homestay",
   shortName: "Ngõ Saigon",
   address: "199/14 De Tham, Ben Thanh, HCM",
+  street: "199/14 De Tham",
+  district: "District 1",
+  city: "Ho Chi Minh City",
+  country: "VN",
   timezone: "Asia/Ho_Chi_Minh",
   // TODO: confirm with the shop — not stated on the poster.
   hours: "All day",
   phone: "+84 9333 63 173",
+  // TODO: real coordinates from Google Maps — placeholder is central District 1.
+  geo: { lat: 10.7716, lng: 106.698 },
+};
+
+/**
+ * Where the "Find us" map points.
+ *
+ * TODO: paste the shop's exact coordinates here (Google Maps -> right-click
+ * your door -> click the lat/lng to copy). While this is null the map falls
+ * back to geocoding LOCATION.address, which for an alley address like
+ * "199/14 De Tham" may resolve to the street entrance rather than the door.
+ *
+ * Setting this should also replace the LOCATION.geo placeholder above, which
+ * the SelfStorage JSON-LD publishes.
+ */
+export const MAP: { coords: { lat: number; lng: number } | null } = {
+  coords: null,
 };
 
 export type SizeConfig = {

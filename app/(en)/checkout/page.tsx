@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckoutForm } from "@/components/checkout-form";
 import { OrderSummary } from "@/components/order-summary";
@@ -5,7 +6,12 @@ import { Card } from "@/components/ui/card";
 import { getSizeConfig } from "@/lib/config";
 import { countAvailable } from "@/lib/data/bookings";
 import { InvalidRangeError, quote } from "@/lib/pricing";
+import { noIndexMetadata } from "@/lib/seo";
 import { encodeItems, selectionSchema } from "@/lib/validation";
+
+// Contains guest personal details entered during checkout — must never be
+// indexed. See also app/robots.ts, which disallows crawling this path.
+export const metadata: Metadata = noIndexMetadata;
 
 function Recovery({ message }: { message: string }) {
   return (

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
@@ -6,6 +7,11 @@ import { Card } from "@/components/ui/card";
 import { LOCATION } from "@/lib/config";
 import { findByRef } from "@/lib/data/bookings";
 import { quote } from "@/lib/pricing";
+import { noIndexMetadata } from "@/lib/seo";
+
+// Contains the guest's booking reference and order details — must never be
+// indexed. See also app/robots.ts, which disallows crawling /booking/.
+export const metadata: Metadata = noIndexMetadata;
 
 export default async function BookingConfirmationPage(
   props: PageProps<"/booking/[ref]">

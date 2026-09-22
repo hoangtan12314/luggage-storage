@@ -15,12 +15,12 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <main className="flex-1 bg-zinc-50 dark:bg-black">
+    <main className="flex-1 bg-background">
       <div className="mx-auto max-w-lg px-6 py-16 text-center">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-2xl font-semibold text-foreground">
           Đã xảy ra lỗi
         </h1>
-        <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 text-muted-foreground">
           Vui lòng thử lại. Nếu vẫn gặp lỗi, hãy quay lại sau.
         </p>
         <Button onClick={reset} className="mt-6">

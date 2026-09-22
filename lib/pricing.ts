@@ -1,10 +1,11 @@
-import { getSizeConfig } from "./config";
+import { getSizeConfig, ROOM } from "./config";
 import type {
   BookingItem,
   LockerSize,
   Quote,
   QuotedItem,
   QuoteLine,
+  RoomQuote,
 } from "./types";
 
 const MS_PER_HOUR = 1000 * 60 * 60;
@@ -118,6 +119,7 @@ export function quote(
   });
 
   return {
+    kind: "luggage",
     items: quoted,
     start: new Date(startMs).toISOString(),
     end: new Date(endMs).toISOString(),
@@ -141,4 +143,54 @@ export function describeDuration(start: string, end: string): string {
   if (hours) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
 
   return parts.join(" ");
+}
+
+/**
+ * Nights between two "YYYY-MM-DD" dates. Room dates are date-only (not full
+ * ISO instants like luggage's start/end) — the widget uses plain date
+ * pickers, and normalizing to the shop's actual check-in/out clock times
+ * (ROOM.checkInTime/checkOutTime) is deferred to the pricing backend; for
+ * now this is calendar nights, computed in UTC to sidestep timezone edge
+ * cases in a date-only diff.
+ */
+export function nightsBetween(checkIn: string, checkOut: string): number {
+  const inMs = Date.parse(`${checkIn}T00:00:00Z`);
+  const outMs = Date.parse(`${checkOut}T00:00:00Z`);
+
+  if (Number.isNaN(inMs) || Number.isNaN(outMs)) {
+    throw new InvalidRangeError("checkIn/checkOut must be valid dates");
+  }
+  if (outMs <= inMs) {
+    throw new InvalidRangeError("checkOut must be after checkIn");
+  }
+
+  return Math.round((outMs - inMs) / (MS_PER_HOUR * HOURS_PER_DAY));
+}
+
+/**
+ * Prices a room stay: nights × nightly rate × quantity. No cheapest-
+ * combination billing here — rooms only have one rate, unlike lockers'
+ * hour/day/week tiers.
+ */
+export function quoteRoom(
+  checkIn: string,
+  checkOut: string,
+  quantity: number
+): RoomQuote {
+  if (quantity < 1) {
+    throw new InvalidRangeError("quantity must be at least 1");
+  }
+
+  const nights = nightsBetween(checkIn, checkOut);
+
+  return {
+    kind: "room",
+    checkIn,
+    checkOut,
+    nights,
+    quantity,
+    nightlyRate: ROOM.nightly,
+    total: nights * ROOM.nightly * quantity,
+    currency: "VND",
+  };
 }

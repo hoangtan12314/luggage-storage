@@ -25,7 +25,7 @@ export function FindUsMap({ copy }: { copy: HomeCopy["findUs"] }) {
         <div className="flex flex-wrap items-start justify-between gap-4 p-4">
           <div className="space-y-1.5 text-sm">
             <p className="flex items-center gap-2 font-medium">
-              <MapPin className="text-brand size-4 shrink-0" />
+              <MapPin className="text-brand-ink size-4 shrink-0" />
               {LOCATION.address}
             </p>
             <p className="text-muted-foreground flex items-center gap-2">
@@ -51,7 +51,7 @@ export function FindUsMap({ copy }: { copy: HomeCopy["findUs"] }) {
               href={mapsLinkUrl()}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-brand inline-flex items-center gap-1.5 text-sm hover:underline"
+              className="text-brand-ink inline-flex items-center gap-1.5 text-sm hover:underline"
             >
               {copy.openInMaps}
               <ExternalLink className="size-3.5" />

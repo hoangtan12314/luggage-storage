@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/vi"],
+      allow: ["/", "/luggage", "/rooms", "/vi", "/vi/luggage", "/vi/rooms"],
       // Checkout and booking confirmation carry guest personal details and
       // must never be crawled — see the noindex meta on those pages too.
       disallow: ["/checkout", "/booking/"],

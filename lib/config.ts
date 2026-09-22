@@ -81,6 +81,43 @@ export const SIZES: SizeConfig[] = [
   },
 ];
 
+export type RoomConfig = {
+  label: string;
+  description: string;
+  capacity: string;
+  nightly: number;
+  inventory: number;
+  /** Standard check-in/out times, "HH:mm" in LOCATION.timezone. */
+  checkInTime: string;
+  checkOutTime: string;
+  amenities: string[];
+};
+
+/**
+ * Sample data — the room-booking UI is built ahead of the pricing backend
+ * (see the plan). Nothing here is a confirmed real number yet.
+ *
+ * TODO: confirm the real nightly rate, capacity, amenities and check-in/out
+ * times with the shop before this goes live. `nightly` in particular is a
+ * placeholder guess, not a quoted price.
+ */
+export const ROOM: RoomConfig = {
+  label: "Private Room",
+  description:
+    "A private ensuite room a few steps from the luggage counter — quiet, air-conditioned, and walking distance from Ben Thanh Market and Bui Vien.",
+  capacity: "Up to 2 guests",
+  nightly: 450_000,
+  inventory: 3,
+  checkInTime: "14:00",
+  checkOutTime: "12:00",
+  amenities: [
+    "Air conditioning",
+    "Ensuite bathroom",
+    "Free WiFi",
+    "Daily housekeeping",
+  ],
+};
+
 export function getSizeConfig(id: LockerSize): SizeConfig {
   const size = SIZES.find((s) => s.id === id);
   if (!size) {

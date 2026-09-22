@@ -1,5 +1,5 @@
 import { SIZES } from "./config";
-import { countAvailable } from "./data/bookings";
+import { countAvailable, countRoomsAvailable } from "./data/bookings";
 import type { LockerSize } from "./types";
 
 /**
@@ -23,4 +23,19 @@ export async function getNextDayAvailability(): Promise<
     );
   }
   return availability;
+}
+
+/**
+ * Rooms free tonight, as a rough up-front signal on the rooms page — the
+ * same "next 24h" heuristic getNextDayAvailability uses for lockers. The
+ * booking action re-checks the customer's actual chosen dates authoritatively
+ * at submit.
+ */
+export async function getTonightRoomAvailability(): Promise<number> {
+  const now = new Date();
+  const tonight = now.toISOString().slice(0, 10);
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  return countRoomsAvailable(tonight, tomorrow);
 }

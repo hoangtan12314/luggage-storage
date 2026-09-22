@@ -56,3 +56,29 @@ export type HomeCopy = {
     mapTitle: string;
   };
 };
+
+/** Copy for the "/" homestay landing page introducing both services. */
+export type LandingCopy = {
+  meta: { title: string; description: string };
+  hero: { h1: string; tagline: string };
+  services: {
+    luggage: { title: string; blurb: string; cta: string; priceFrom: string };
+    rooms: { title: string; blurb: string; cta: string; priceFrom: string };
+  };
+};
+
+/** Copy for the "/rooms" room-booking page. */
+export type RoomsCopy = {
+  meta: { title: string; description: string };
+  hero: { h1: string; subhead: string; tagline: string };
+  intro: string;
+  amenitiesHeading: string;
+  amenities: string[];
+  rateHeading: string;
+  rateNote: string;
+  faq: {
+    heading: string;
+    items: FaqItem[];
+  };
+  findUs: HomeCopy["findUs"];
+};

@@ -128,22 +128,36 @@
     @apply font-sans;
   }
 }
-/* Brand accents for the booking widget: selected size cards and the summary
-   panel, matching the shop's yellow/orange signage. */
+/* Brand accents, keyed to the requested #f9a61c.
+   --brand is a fill colour, not a text colour: measured at 2.0:1 against
+   white, well under the 4.5:1 minimum for body text (10.5:1 against black,
+   which is why buttons filled with --brand use dark --brand-foreground
+   text). Anywhere amber needs to be the *ink* on a light background — prices,
+   links — use --brand-ink instead, which is a darkened amber that clears
+   4.5:1 (measured ~5:1, Tailwind's amber-700). In dark mode, --brand itself
+   already clears >9:1 against the near-black background, so --brand-ink is
+   just a slightly lighter amber there for a touch of hierarchy, not a
+   contrast fix. */
 :root {
-  --brand: oklch(0.646 0.222 41.116);
+  --brand: #f9a61c;
+  --brand-ink: #b45309;
+  --brand-foreground: oklch(0.145 0 0);
   --brand-muted: oklch(0.97 0.03 75);
   --brand-border: oklch(0.83 0.11 65);
 }
 
 .dark {
-  --brand: oklch(0.705 0.213 47.604);
+  --brand: #f9a61c;
+  --brand-ink: #fbbf24;
+  --brand-foreground: oklch(0.145 0 0);
   --brand-muted: oklch(0.28 0.05 60);
   --brand-border: oklch(0.45 0.1 55);
 }
 
 @theme inline {
   --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-foreground: var(--brand-foreground);
   --color-brand-muted: var(--brand-muted);
   --color-brand-border: var(--brand-border);
 }

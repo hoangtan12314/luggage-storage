@@ -1,11 +1,15 @@
 import { ImageResponse } from "next/og";
-import { LOCATION } from "@/lib/config";
+import { LOCATION, ROOM } from "@/lib/config";
 
-export const alt = "Ngõ Saigon Homestay — Rooms & Luggage Storage, District 1, Ho Chi Minh City";
+export const alt = "Room Booking at Ngõ Saigon Homestay — District 1, Ho Chi Minh City";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function Image() {
+  // See app/(en)/luggage/opengraph-image.tsx: next/og's font fetching has no
+  // glyph for ₫, so this spells out "VND" rather than showing a tofu box.
+  const nightlyLabel = `${new Intl.NumberFormat("en-US").format(ROOM.nightly)} VND`;
+
   return new ImageResponse(
     (
       <div
@@ -23,10 +27,13 @@ export default function Image() {
       >
         <div style={{ fontSize: 40, opacity: 0.9, display: "flex" }}>🏠 {LOCATION.shortName}</div>
         <div style={{ fontSize: 68, fontWeight: 700, marginTop: 24, display: "flex" }}>
-          Rooms & Luggage Storage
+          Room Booking
         </div>
         <div style={{ fontSize: 40, opacity: 0.9, marginTop: 12, display: "flex" }}>
           District 1 · Ho Chi Minh City
+        </div>
+        <div style={{ fontSize: 32, opacity: 0.85, marginTop: 40, display: "flex" }}>
+          From {nightlyLabel} / night
         </div>
       </div>
     ),

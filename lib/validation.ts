@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getSizeConfig } from "./config";
+import { getSizeConfig, ROOM } from "./config";
 import type { BookingItem } from "./types";
 
 export const lockerSizeSchema = z.enum(["small", "large"]);
@@ -69,6 +69,28 @@ export const selectionSchema = z
   });
 
 export type SelectionInput = z.infer<typeof selectionSchema>;
+
+/**
+ * Parses the room selection query params: checkIn, checkOut ("YYYY-MM-DD"),
+ * and quantity (1..ROOM.inventory). Same untrusted-input posture as the
+ * luggage schema above — re-run server-side, never trusted from the URL.
+ */
+export const roomSelectionSchema = z
+  .object({
+    checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid check-in date"),
+    checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid check-out date"),
+    quantity: z.coerce
+      .number()
+      .int()
+      .min(1, "Select at least one room")
+      .max(ROOM.inventory, `Only ${ROOM.inventory} rooms available`),
+  })
+  .refine((val) => val.checkOut > val.checkIn, {
+    message: "Check-out must be after check-in",
+    path: ["checkOut"],
+  });
+
+export type RoomSelectionInput = z.infer<typeof roomSelectionSchema>;
 
 export const customerSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name"),

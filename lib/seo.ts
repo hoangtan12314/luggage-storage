@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { LOCATION, SITE_URL, SIZES } from "./config";
-import { copy } from "./i18n";
+import { LOCATION, ROOM, SITE_URL, SIZES } from "./config";
+import { copy, landingCopy, roomsCopy } from "./i18n";
 import { mapsLinkUrl } from "./maps";
 import type { Locale } from "./i18n";
 
@@ -16,28 +16,38 @@ export function buildBaseMetadata(): Metadata {
   };
 }
 
-/** Per-locale home page metadata: title, description, canonical + hreflang. */
-export function buildHomeMetadata(locale: Locale): Metadata {
-  const c = copy[locale];
-  const path = locale === "en" ? "/" : "/vi";
+/**
+ * Builds per-locale page metadata: title, description, canonical + hreflang.
+ * `pathEn`/`pathVi` are each page's own path in that language — every page
+ * points its hreflang alternates at its own translation, not at the site
+ * root, so the landing, luggage and rooms pages never get cross-linked as if
+ * they were the same content.
+ */
+function buildPageMetadata(
+  locale: Locale,
+  pathEn: string,
+  pathVi: string,
+  meta: { title: string; description: string }
+): Metadata {
+  const path = locale === "en" ? pathEn : pathVi;
 
   return {
-    // .absolute ignores the root layout's title.template — c.meta.title is
+    // .absolute ignores the root layout's title.template — meta.title is
     // already a complete title (it includes "| Ngõ Saigon" itself), so
     // letting the template apply on top of it would double the suffix.
-    title: { absolute: c.meta.title },
-    description: c.meta.description,
+    title: { absolute: meta.title },
+    description: meta.description,
     alternates: {
       canonical: path,
       languages: {
-        en: "/",
-        vi: "/vi",
-        "x-default": "/",
+        en: pathEn,
+        vi: pathVi,
+        "x-default": pathEn,
       },
     },
     openGraph: {
-      title: c.meta.title,
-      description: c.meta.description,
+      title: meta.title,
+      description: meta.description,
       url: path,
       siteName: LOCATION.name,
       locale: locale === "en" ? "en_US" : "vi_VN",
@@ -45,10 +55,25 @@ export function buildHomeMetadata(locale: Locale): Metadata {
     },
     twitter: {
       card: "summary_large_image",
-      title: c.meta.title,
-      description: c.meta.description,
+      title: meta.title,
+      description: meta.description,
     },
   };
+}
+
+/** Metadata for the "/" homestay landing page. */
+export function buildLandingMetadata(locale: Locale): Metadata {
+  return buildPageMetadata(locale, "/", "/vi", landingCopy[locale].meta);
+}
+
+/** Metadata for the "/luggage" page — this is where the luggage SEO work lives. */
+export function buildLuggageMetadata(locale: Locale): Metadata {
+  return buildPageMetadata(locale, "/luggage", "/vi/luggage", copy[locale].meta);
+}
+
+/** Metadata for the "/rooms" page. */
+export function buildRoomsMetadata(locale: Locale): Metadata {
+  return buildPageMetadata(locale, "/rooms", "/vi/rooms", roomsCopy[locale].meta);
 }
 
 /** Marks a route non-indexable — used by checkout and booking confirmation,
@@ -58,11 +83,12 @@ export const noIndexMetadata: Metadata = {
 };
 
 /**
- * SelfStorage (a LocalBusiness subtype) structured data for the home page.
- * Built from LOCATION/SIZES so it can never disagree with what's on the page.
+ * SelfStorage (a LocalBusiness subtype) structured data for the luggage
+ * page. Built from LOCATION/SIZES so it can never disagree with what's on
+ * the page.
  */
 export function buildSelfStorageJsonLd(locale: Locale) {
-  const path = locale === "en" ? "/" : "/vi";
+  const path = locale === "en" ? "/luggage" : "/vi/luggage";
   const prices = SIZES.flatMap((s) => [s.hourly, s.daily, s.weekly]);
 
   return {
@@ -124,6 +150,65 @@ export function buildFaqJsonLd(locale: Locale) {
         "@type": "Answer",
         text: item.answer,
       },
+    })),
+  };
+}
+
+/**
+ * FAQPage structured data for the rooms page, matching its own on-page FAQ
+ * rather than the luggage page's.
+ */
+export function buildRoomsFaqJsonLd(locale: Locale) {
+  const { items } = roomsCopy[locale].faq;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+/**
+ * LodgingBusiness structured data for the rooms page — the room-booking
+ * counterpart to buildSelfStorageJsonLd. Built from LOCATION/ROOM so it
+ * can't disagree with what the page shows.
+ */
+export function buildLodgingJsonLd(locale: Locale) {
+  const path = locale === "en" ? "/rooms" : "/vi/rooms";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    name: `${LOCATION.name} — Rooms`,
+    url: `${SITE_URL}${path}`,
+    telephone: LOCATION.phone,
+    priceRange: `₫${ROOM.nightly.toLocaleString("en-US")}`,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: LOCATION.street,
+      addressLocality: LOCATION.district,
+      addressRegion: LOCATION.city,
+      addressCountry: LOCATION.country,
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: LOCATION.geo.lat,
+      longitude: LOCATION.geo.lng,
+    },
+    areaServed: ["District 1", "Ho Chi Minh City"],
+    hasMap: mapsLinkUrl(),
+    numberOfRooms: ROOM.inventory,
+    amenityFeature: roomsCopy[locale].amenities.map((name) => ({
+      "@type": "LocationFeatureSpecification",
+      name,
+      value: true,
     })),
   };
 }

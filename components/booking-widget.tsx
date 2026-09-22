@@ -146,7 +146,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
               <p className="text-xs font-semibold">
                 {label}
                 {key === "weekly" && (
-                  <span className="text-brand ml-1 font-medium">· best value</span>
+                  <span className="text-brand-ink ml-1 font-medium">· best value</span>
                 )}
               </p>
               <p className="text-muted-foreground mt-0.5 text-[11px]">
@@ -319,7 +319,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                   {formatDayLabel(preview.quote.end)}
                 </p>
               </div>
-              <p className="text-brand text-xl font-bold">
+              <p className="text-brand-ink text-xl font-bold">
                 {formatVnd(preview.quote.total)}
               </p>
             </div>

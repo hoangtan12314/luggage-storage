@@ -8,21 +8,19 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/form-field";
 
 type CheckoutFormProps = {
-  /** Encoded selection, e.g. "small:2,large:1". */
-  items: string;
-  start: string;
-  end: string;
+  /**
+   * Selection carried as hidden fields, shaped for whichever kind of
+   * booking this is — e.g. { kind: "luggage", items: "small:2", start,
+   * end } or { kind: "room", checkIn, checkOut, quantity }. The form
+   * doesn't need to understand the shape; lib/actions.ts branches on `kind`
+   * server-side and re-validates everything regardless.
+   */
+  hidden: Record<string, string>;
   total: number;
   disabled?: boolean;
 };
 
-export function CheckoutForm({
-  items,
-  start,
-  end,
-  total,
-  disabled,
-}: CheckoutFormProps) {
+export function CheckoutForm({ hidden, total, disabled }: CheckoutFormProps) {
   const [state, formAction, pending] = useActionState(
     createBooking,
     initialCreateBookingState
@@ -30,9 +28,9 @@ export function CheckoutForm({
 
   return (
     <form action={formAction} className="space-y-4">
-      <input type="hidden" name="items" value={items} />
-      <input type="hidden" name="start" value={start} />
-      <input type="hidden" name="end" value={end} />
+      {Object.entries(hidden).map(([name, value]) => (
+        <input key={name} type="hidden" name={name} value={value} />
+      ))}
 
       <FormField
         label="Full name"
@@ -70,7 +68,7 @@ export function CheckoutForm({
         disabled={pending || disabled}
         className="w-full"
       >
-        {pending ? "Processing…" : `Pay ${formatVnd(total)}`}
+        {pending ? "Processing…" : `Reserve — pay ${formatVnd(total)} on arrival`}
       </Button>
 
       <p className="text-muted-foreground text-xs">

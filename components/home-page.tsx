@@ -52,7 +52,7 @@ export function HomePage({ locale, availability }: HomePageProps) {
                 ] as const
               ).map(([Icon, text], i) => (
                 <p key={i} className="text-muted-foreground flex items-center gap-2.5 text-sm">
-                  <Icon className="text-brand size-4 shrink-0" />
+                  <Icon className="text-brand-ink size-4 shrink-0" />
                   {text}
                 </p>
               ))}

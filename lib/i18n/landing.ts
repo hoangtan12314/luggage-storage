@@ -2,58 +2,103 @@ import type { LandingCopy, Locale } from "./types";
 
 const en: LandingCopy = {
   meta: {
-    title: "Ngõ Saigon Homestay — Rooms & Luggage Storage in District 1",
+    title:
+      "Ngõ Saigon — Cooking Classes, Rooms & Luggage Storage in District 1",
     description:
-      "A homestay in the heart of District 1, Ho Chi Minh City: private rooms by the night, and secure luggage storage by the hour, day, or week.",
+      "A homestay in the heart of District 1, Ho Chi Minh City: hands-on Vietnamese cooking classes, private rooms by the night, and secure luggage storage by the hour, day, or week.",
+  },
+  nav: {
+    cooking: "Cooking Classes",
+    rooms: "Rooms",
+    luggage: "Luggage Storage",
+    bookNow: "Book now",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
   },
   hero: {
-    h1: "Ngõ Saigon Homestay",
-    tagline:
-      "A private room to stay, or a locker to drop your bags — both in the heart of District 1, walking distance from Ben Thanh Market and Bui Vien.",
+    eyebrow: "NGÕ SAIGON",
+    h1: "Experience Saigon Your Way",
+    h1Mobile: "Ngõ Saigon",
+    tagline: "Stay · Store · Experience",
+    description:
+      "Discover the local side of Saigon through hands-on Vietnamese workshops, cozy homestay experiences, and convenient luggage storage in the heart of the city.",
+    descriptionMobile:
+      "A homestay, secure luggage storage, and hands-on Vietnamese food experiences in District 1.",
+    learnMore: "Learn more",
+    exploreCta: "Explore our services",
+    imageAlt:
+      "A smiling guest holding a bánh mì she just made in a Ngõ Saigon cooking class",
   },
   services: {
-    luggage: {
-      title: "Luggage Storage",
-      blurb:
-        "Secure, monitored lockers by the hour, day, or week. Drop your bags and go explore.",
-      cta: "Book a locker",
-      priceFrom: "from 10,000 ₫",
+    cooking: {
+      title: "Workshops & Experiences",
+      blurb: "Learn to make Vietnamese coffee, bánh mì and more.",
+      cta: "Explore classes",
+      imageAlt:
+        "Bánh mì ingredients and a Vietnamese coffee set laid out for a cooking class",
     },
     rooms: {
-      title: "Room Booking",
-      blurb:
-        "A private ensuite room, a few steps from the luggage counter. Quiet, air-conditioned.",
+      title: "Accommodation",
+      blurb: "A comfortable stay in the heart of Saigon.",
       cta: "Book a room",
-      priceFrom: "from 450,000 ₫ / night",
+      imageAlt: "A bright private room with a double bed and a balcony door",
+    },
+    luggage: {
+      title: "Luggage Storage",
+      blurb: "Explore Saigon hands-free.",
+      cta: "Store your bags",
+      imageAlt: "A suitcase standing in a tidy room",
     },
   },
 };
 
 const vi: LandingCopy = {
   meta: {
-    title: "Ngõ Saigon Homestay — Phòng Nghỉ & Gửi Hành Lý Quận 1",
+    title: "Ngõ Saigon — Lớp Nấu Ăn, Phòng Nghỉ & Gửi Hành Lý Quận 1",
     description:
-      "Homestay ngay trung tâm Quận 1, TP.HCM: phòng riêng theo đêm, và dịch vụ gửi giữ hành lý an toàn theo giờ, ngày hoặc tuần.",
+      "Homestay ngay trung tâm Quận 1, TP.HCM: lớp nấu ăn Việt Nam thực hành, phòng riêng theo đêm, và dịch vụ gửi giữ hành lý an toàn theo giờ, ngày hoặc tuần.",
+  },
+  nav: {
+    cooking: "Lớp Nấu Ăn",
+    rooms: "Phòng Nghỉ",
+    luggage: "Gửi Hành Lý",
+    bookNow: "Đặt ngay",
+    openMenu: "Mở menu",
+    closeMenu: "Đóng menu",
   },
   hero: {
-    h1: "Ngõ Saigon Homestay",
-    tagline:
-      "Một phòng riêng để nghỉ ngơi, hoặc một tủ để gửi hành lý — cả hai đều ngay trung tâm Quận 1, chỉ vài phút đi bộ từ Chợ Bến Thành và phố đi bộ Bùi Viện.",
+    eyebrow: "NGÕ SAIGON",
+    h1: "Trải Nghiệm Sài Gòn Theo Cách Của Bạn",
+    h1Mobile: "Ngõ Saigon",
+    tagline: "Ở · Gửi · Trải nghiệm",
+    description:
+      "Khám phá Sài Gòn bản địa qua các lớp học ẩm thực Việt, homestay ấm cúng và dịch vụ gửi hành lý tiện lợi ngay giữa lòng thành phố.",
+    descriptionMobile:
+      "Homestay, gửi hành lý an toàn và các trải nghiệm ẩm thực Việt Nam ngay tại Quận 1.",
+    learnMore: "Tìm hiểu thêm",
+    exploreCta: "Khám phá dịch vụ",
+    imageAlt:
+      "Một vị khách đang mỉm cười cầm chiếc bánh mì vừa làm trong lớp nấu ăn tại Ngõ Saigon",
   },
   services: {
-    luggage: {
-      title: "Gửi Hành Lý",
-      blurb:
-        "Tủ gửi đồ an toàn, có giám sát, theo giờ, ngày hoặc tuần. Gửi hành lý và đi khám phá.",
-      cta: "Đặt tủ gửi đồ",
-      priceFrom: "chỉ từ 10.000 ₫",
+    cooking: {
+      title: "Lớp Học & Trải Nghiệm",
+      blurb: "Học pha cà phê Việt, làm bánh mì và nhiều món khác.",
+      cta: "Xem lớp học",
+      imageAlt:
+        "Nguyên liệu bánh mì và bộ pha cà phê Việt được bày sẵn cho một lớp nấu ăn",
     },
     rooms: {
-      title: "Đặt Phòng",
-      blurb:
-        "Phòng riêng có nhà vệ sinh khép kín, ngay gần quầy gửi hành lý. Yên tĩnh, có máy lạnh.",
+      title: "Lưu Trú",
+      blurb: "Chỗ nghỉ thoải mái giữa lòng Sài Gòn.",
       cta: "Đặt phòng",
-      priceFrom: "chỉ từ 450.000 ₫ / đêm",
+      imageAlt: "Phòng riêng sáng sủa với giường đôi và cửa ra ban công",
+    },
+    luggage: {
+      title: "Gửi Hành Lý",
+      blurb: "Thong dong khám phá Sài Gòn.",
+      cta: "Gửi hành lý",
+      imageAlt: "Một chiếc vali đặt trong căn phòng gọn gàng",
     },
   },
 };

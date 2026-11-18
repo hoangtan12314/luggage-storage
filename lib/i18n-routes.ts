@@ -19,7 +19,10 @@ export function localizedPath(pathname: string, target: Locale): string {
     : pathname;
 
   const translatable =
-    enPath === "/" || enPath.startsWith("/luggage") || enPath.startsWith("/rooms");
+    enPath === "/" ||
+    enPath.startsWith("/luggage") ||
+    enPath.startsWith("/rooms") ||
+    enPath.startsWith("/classes");
 
   if (!translatable) {
     return target === "en" ? "/" : "/vi";

@@ -30,10 +30,10 @@ export function LanguageSwitcher({ locale }: { locale: Locale }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring flex items-center gap-1.5 rounded-md text-sm focus-visible:ring-2 focus-visible:outline-none"
+        className="focus-visible:ring-ring flex items-center gap-1.5 rounded-md text-base text-cocoa hover:text-brand-ink focus-visible:ring-2 focus-visible:outline-none"
         aria-label="Change language"
       >
-        <Globe className="size-4" />
+        <Globe aria-hidden className="size-5" strokeWidth={1.5} />
         <span>{LABEL[locale]}</span>
         <ChevronDown className="size-3.5" />
       </DropdownMenuTrigger>

@@ -60,11 +60,50 @@ export type HomeCopy = {
 /** Copy for the "/" homestay landing page introducing both services. */
 export type LandingCopy = {
   meta: { title: string; description: string };
-  hero: { h1: string; tagline: string };
-  services: {
-    luggage: { title: string; blurb: string; cta: string; priceFrom: string };
-    rooms: { title: string; blurb: string; cta: string; priceFrom: string };
+  /** Primary nav labels, shared by the site header and the mobile menu. */
+  nav: {
+    cooking: string;
+    rooms: string;
+    luggage: string;
+    bookNow: string;
+    openMenu: string;
+    closeMenu: string;
   };
+  hero: {
+    /** Small caps line above the desktop headline. */
+    eyebrow: string;
+    /** Desktop headline. Mobile shows the brand name instead (see h1Mobile). */
+    h1: string;
+    h1Mobile: string;
+    /** Tracked-caps line: "Stay · Store · Experience". */
+    tagline: string;
+    description: string;
+    /** Shorter paragraph used on mobile. */
+    descriptionMobile: string;
+    learnMore: string;
+    exploreCta: string;
+    imageAlt: string;
+  };
+  services: {
+    cooking: ServiceCardCopy;
+    rooms: ServiceCardCopy;
+    luggage: ServiceCardCopy;
+  };
+};
+
+export type ServiceCardCopy = {
+  title: string;
+  blurb: string;
+  cta: string;
+  imageAlt: string;
+};
+
+/** Copy for the placeholder "/classes" page (real cooking classes come later). */
+export type ClassesCopy = {
+  meta: { title: string; description: string };
+  h1: string;
+  body: string;
+  cta: string;
 };
 
 /** Copy for the "/rooms" room-booking page. */

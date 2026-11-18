@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-montserrat);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -160,4 +160,26 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-brand-muted: var(--brand-muted);
   --color-brand-border: var(--brand-border);
+}
+
+/* Landing / header palette (from ui-sample). Warm cream surfaces, cocoa text,
+   gold fills. Page-scoped on purpose: the luggage/rooms/checkout pages keep
+   the white theme. --gold is a *fill* (buttons, rules) — text sitting on it
+   uses --cocoa (≈6:1), and gold-coloured link text uses --brand-ink, never
+   --gold itself (see the contrast note above). */
+:root {
+  --cream: #f8ede1;
+  --cream-2: #fbf4ec;
+  --cocoa: #3b2314;
+  --cocoa-muted: #6a5546;
+  --gold: #d9a054;
+}
+
+@theme inline {
+  --color-cream: var(--cream);
+  --color-cream-2: var(--cream-2);
+  --color-cocoa: var(--cocoa);
+  --color-cocoa-muted: var(--cocoa-muted);
+  --color-gold: var(--gold);
+  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 }

@@ -2,17 +2,21 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getSizeConfig, ROOM } from "./config";
+import { getSizeConfig, getWorkshop, ROOM } from "./config";
 import {
   countAvailable,
   countRoomsAvailable,
+  countSeatsAvailable,
   createBooking as createBookingRecord,
 } from "./data/bookings";
 import { notificationProvider } from "./notifications";
 import { paymentProvider } from "./payments";
-import { quote, quoteRoom, InvalidRangeError } from "./pricing";
+import { quote, quoteClass, quoteRoom, InvalidRangeError } from "./pricing";
 import { generateRef } from "./reference";
 import {
+  classCustomerSchema,
+  classNotesSchema,
+  classSelectionSchema,
   customerSchema,
   roomSelectionSchema,
   selectionSchema,
@@ -20,16 +24,24 @@ import {
 import type { CreateBookingState } from "./booking-form-state";
 
 /**
- * Server Action backing both checkout forms (luggage and room). Server
- * Actions are reachable via direct POST, not only through the UI that
- * renders this form — so every input is re-validated, re-priced, and
- * re-checked here rather than trusted from the client, for both kinds.
+ * Server Action backing every booking form (luggage, room and class).
+ * Server Actions are reachable via direct POST, not only through the UI
+ * that renders the form — so every input is re-validated, re-priced, and
+ * re-checked here rather than trusted from the client, for all kinds.
  */
 export async function createBooking(
   _prevState: CreateBookingState,
   formData: FormData
 ): Promise<CreateBookingState> {
-  const kind = formData.get("kind") === "room" ? "room" : "luggage";
+  const rawKind = formData.get("kind");
+
+  // Classes collect different contact details (phone OR WhatsApp), so they
+  // validate their own customer shape.
+  if (rawKind === "class") {
+    return createClassBooking(formData);
+  }
+
+  const kind = rawKind === "room" ? "room" : "luggage";
 
   const customerResult = customerSchema.safeParse({
     name: formData.get("name"),
@@ -196,6 +208,91 @@ async function createRoomBooking(
     roomQuantity: quantity,
     start: checkIn,
     end: checkOut,
+    total: priced.total,
+    currency: priced.currency,
+    customer,
+    transactionId: charge.transactionId,
+  });
+
+  await notify(booking);
+  redirect(`/booking/${ref}`);
+}
+
+async function createClassBooking(formData: FormData): Promise<CreateBookingState> {
+  const selectionResult = classSelectionSchema.safeParse({
+    workshopId: formData.get("workshopId"),
+    date: formData.get("date"),
+    time: formData.get("time"),
+    people: formData.get("people"),
+  });
+  const customerResult = classCustomerSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+    whatsapp: formData.get("whatsapp"),
+  });
+
+  const notesResult = classNotesSchema.safeParse(formData.get("notes"));
+
+  if (!selectionResult.success || !customerResult.success || !notesResult.success) {
+    return {
+      errors: {
+        ...(selectionResult.success
+          ? {}
+          : z.flattenError(selectionResult.error).fieldErrors),
+        ...(customerResult.success
+          ? {}
+          : z.flattenError(customerResult.error).fieldErrors),
+        ...(notesResult.success ? {} : { notes: [notesResult.error.issues[0].message] }),
+      } as Record<string, string[]>,
+      message: "Please fix the errors below and try again.",
+    };
+  }
+
+  const { workshopId, date, time, people } = selectionResult.data;
+  const notes = notesResult.data;
+  const customer = customerResult.data;
+
+  // The schema already rejected unknown ids; this narrows the type.
+  const workshop = getWorkshop(workshopId);
+  if (!workshop) {
+    return { errors: { workshopId: ["Choose a class"] }, message: "" };
+  }
+
+  // Authoritative price: the client never sends one, and any it did send
+  // would be ignored.
+  const priced = quoteClass(workshop, date, time, people);
+
+  // Authoritative seat check — seats may have gone since the form rendered.
+  // The pool is per class type + date + time, shared by the type's options.
+  const available = await countSeatsAvailable(workshop.icon, date, time);
+  if (available < people) {
+    return {
+      errors: {},
+      message:
+        available === 0
+          ? `Sorry, ${workshop.name} at ${time} on ${date} is fully booked. Please choose another time or date.`
+          : `Only ${available} seat${available > 1 ? "s" : ""} left for ${workshop.name} at ${time} on ${date}. Please reduce the number of people.`,
+    };
+  }
+
+  const ref = generateRef();
+  const charge = await paymentProvider.charge(priced.total, priced.currency, ref);
+
+  if (!charge.ok) {
+    return { errors: {}, message: charge.error };
+  }
+
+  const booking = await createBookingRecord({
+    ref,
+    kind: "class",
+    workshopId,
+    people,
+    classTime: time,
+    unitPrice: workshop.pricePerPerson,
+    notes,
+    start: date,
+    end: date,
     total: priced.total,
     currency: priced.currency,
     customer,

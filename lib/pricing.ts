@@ -1,6 +1,7 @@
 import { getSizeConfig, ROOM } from "./config";
 import type {
   BookingItem,
+  ClassQuote,
   LockerSize,
   Quote,
   QuotedItem,
@@ -191,6 +192,33 @@ export function quoteRoom(
     quantity,
     nightlyRate: ROOM.nightly,
     total: nights * ROOM.nightly * quantity,
+    currency: "VND",
+  };
+}
+
+/**
+ * Class pricing: pricePerPerson × people. Pure and isomorphic like quote()
+ * and quoteRoom() — the booking form previews with it and the server action
+ * re-runs it for the authoritative price.
+ */
+export function quoteClass(
+  workshop: { id: string; name: string; pricePerPerson: number },
+  date: string,
+  time: string,
+  people: number
+): ClassQuote {
+  if (!Number.isInteger(people) || people < 1) {
+    throw new InvalidRangeError("people must be at least 1");
+  }
+  return {
+    kind: "class",
+    workshopId: workshop.id,
+    name: workshop.name,
+    date,
+    time,
+    people,
+    pricePerPerson: workshop.pricePerPerson,
+    total: workshop.pricePerPerson * people,
     currency: "VND",
   };
 }

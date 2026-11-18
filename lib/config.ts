@@ -125,3 +125,260 @@ export function getSizeConfig(id: LockerSize): SizeConfig {
   }
   return size;
 }
+
+export type Workshop = {
+  id: string;
+  /** Proper-noun product name — shown as-is in both languages. */
+  name: string;
+  pricePerPerson: number;
+  /** Start times, "HH:mm" in LOCATION.timezone. */
+  availableTimes: string[];
+  /**
+   * Cover photo under /public. Omit until the shop has a photo that
+   * actually shows this class — the page falls back to an icon panel rather
+   * than reusing a photo of a different class.
+   */
+  image?: string;
+  /**
+   * Which class *type* this workshop belongs to ("coffee", "cocoa",
+   * "spring-roll"). Workshops with the same value are the options of one
+   * class page, and they share one pool of seats per date + time.
+   */
+  icon: "coffee" | "cocoa" | "spring-roll";
+
+  /** English copy; Vietnamese translations live in lib/i18n/class-content.ts. */
+  highlights: string[];
+  description: string;
+  includes: string[];
+  excludes?: string[];
+  notSuitableFor?: string[];
+
+  meetingPoint: {
+    address: string;
+    details?: string;
+  };
+};
+
+/**
+ * Seats per class session. A session is one class *type* on one date at one
+ * start time; every booking for any option of that type draws from the same
+ * pool (see countSeatsAvailable in lib/data/bookings.ts).
+ */
+export const CLASS_SEATS_PER_SESSION = 5;
+
+/**
+ * Facts shown on every class page. TODO: these come from the owner's
+ * GetYourGuide listing (the spring-roll class) and are applied to all types
+ * until per-class values exist — confirm the duration for the coffee and
+ * cocoa classes. Free cancellation is a policy statement only: there is no
+ * cancel feature, guests call or message the shop. The wording (and the
+ * languages the instructor speaks) lives in lib/i18n/classes.ts.
+ */
+export const CLASS_FACTS = {
+  durationMinHours: 1.5,
+  durationMaxHours: 2.5,
+  freeCancellationHours: 24,
+} as const;
+
+const COFFEE_HIGHLIGHTS = [
+  "Create Vietnamese Bánh Mì and 4 traditional coffee drinks with local guides",
+  "Discover the stories behind Vietnamese cuisine and its French influence",
+  "Experience hands-on preparation using traditional ingredients & local recipes",
+  "Explore the flavors & cultural significance of Vietnamese coffee and street food",
+  "Receive all recipes as a special gift to recreate the experience at home",
+];
+
+const COFFEE_INCLUDES = [
+  "Local guide & barista guidance",
+  "All ingredients and equipment for coffee & Bánh Mì making",
+  "Hands-on experience making Vietnamese Bánh Mì and 4 traditional coffee drinks",
+  "Tasting of all coffee creations and your handmade Bánh Mì",
+  "Small-group experience with cultural stories and Q&A session",
+  "All recipes shared as a special gift after the class",
+  "Vegan options available upon request",
+];
+
+const COCOA_HIGHLIGHTS = [
+  "Create Vietnamese Bánh Mì and 4 traditional cocoa drinks with local guides",
+  "Discover the stories behind & the French influence on Vietnamese cuisine",
+  "Explore the flavors & cultural significance of Vietnamese Cocoa and street food",
+  "Receive all recipes as a special gift to recreate the experience at home",
+];
+
+// The last line was cut off in the text the owner supplied ("…available upo");
+// completed to match the coffee list. TODO: owner to confirm.
+const COCOA_INCLUDES = [
+  "Local guide & barista guidance",
+  "All ingredients and equipment for cocoa and Bánh Mì making",
+  "Hands-on experience making Vietnamese Bánh Mì and 4 traditional Cocoa drinks",
+  "Tasting of all cocoa creations and your handmade Bánh Mì",
+  "Small-group experience with cultural stories and Q&A session",
+  "All recipes shared as a special gift after the class",
+  "Vegan options available upon request",
+];
+
+const SPRING_ROLL_HIGHLIGHTS = [
+  "Roll your own fresh Vietnamese spring rolls in a hands-on class",
+  "Master 3 legendary Vietnamese dipping sauces with expert guidance",
+  "Enjoy a small, intimate class with hands-on guidance for each participant",
+  "Discover a tiny Saigon corner with Hanoi’s cozy alley vibes",
+];
+
+const SPRING_ROLL_INCLUDES = [
+  "Welcome drink: Vietnamese-style mojito",
+  "Hands-on guidance to make Vietnamese spring rolls",
+  "All fresh ingredients: herbs, veggies, noodles, pre-cooked proteins",
+  "Instruction to master three legendary dipping sauces",
+  "Use of cooking tools and utensils provided",
+  "Small group personalized attention",
+  "Takeaway box if you can’t finish your rolls",
+];
+
+const COFFEE_DESCRIPTION =
+  "Learn to make authentic Vietnamese coffee and bánh mì in a hands-on workshop guided by local experts. Discover the history and cultural significance behind two of Vietnam’s most iconic foods while creating and enjoying your own delicious creations.";
+
+const COCOA_DESCRIPTION =
+  "Learn to make authentic Vietnamese cocoa drinks and Bánh Mì in a hands-on workshop guided by local experts. Discover the history and cultural significance behind Vietnamese cacao and one of the country's most iconic foods while creating and enjoying your own delicious creations.";
+
+const SPRING_ROLL_DESCRIPTION =
+  "Step into Ngõ Saigon, a cozy corner in Saigon inspired by the charm of Hanoi’s hidden alleys, for a hands-on no-fire dinner experience. Start by exploring fresh herbs, crisp vegetables, tender rice noodles, and pre-prepared proteins carefully selected to create the perfect Vietnamese spring rolls. Under the guidance of your instructor, learn to prepare fresh spring rolls and master three legendary dipping sauces.";
+
+// Same place, formatted differently by the owner. TODO: unify. Note this is
+// NOT the homestay address in LOCATION (De Tham) — classes meet on Bùi Viện.
+const COFFEE_MEETING_POINT = {
+  address: "104/23 Bùi Viện, Bến Thành, Hồ Chí Minh, Vietnam",
+};
+
+const COCOA_MEETING_POINT = {
+  address: "104/23 Bùi Viện, Bến Thành, Hồ Chí Minh, Vietnam",
+};
+
+const SPRING_ROLL_MEETING_POINT = {
+  address:
+    "104/23 Bùi Viện, Phường Phạm Ngũ Lão, Quận 1, Thành phố Hồ Chí Minh, Vietnam",
+};
+
+/** The shop's cooking workshops, exactly as the owner supplied them. */
+export const WORKSHOPS: Workshop[] = [
+  {
+    id: "coffee-banh-mi",
+    name: "Coffee & Bánh Mì Workshop",
+    pricePerPerson: 219_000,
+    availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    image: "/cooking-class-service.jpg",
+    icon: "coffee",
+
+    highlights: COFFEE_HIGHLIGHTS,
+    description: COFFEE_DESCRIPTION,
+    includes: COFFEE_INCLUDES,
+    excludes: ["Transportation to the workshop"],
+    notSuitableFor: ["Children under 6 years", "People over 95 years"],
+    meetingPoint: COFFEE_MEETING_POINT,
+  },
+  {
+    id: "four-types-coffee",
+    name: "4 Types Coffee & Bánh Mì",
+    pricePerPerson: 449_000,
+    availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    image: "/cooking-class-service.jpg",
+    icon: "coffee",
+
+    highlights: COFFEE_HIGHLIGHTS,
+    description: COFFEE_DESCRIPTION,
+    includes: COFFEE_INCLUDES,
+    excludes: ["Transportation to the workshop"],
+    notSuitableFor: ["Children under 6 years", "People over 95 years"],
+    meetingPoint: COFFEE_MEETING_POINT,
+  },
+  {
+    id: "cocoa-banh-mi",
+    name: "Cocoa & Bánh Mì Workshop",
+    pricePerPerson: 219_000,
+    availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    icon: "cocoa",
+
+    highlights: COCOA_HIGHLIGHTS,
+    description: COCOA_DESCRIPTION,
+    includes: COCOA_INCLUDES,
+    excludes: ["Transportation to the workshop"],
+    notSuitableFor: ["Children under 6 years", "People over 95 years"],
+    meetingPoint: COCOA_MEETING_POINT,
+  },
+  {
+    id: "four-types-cocoa",
+    name: "4 Types Cocoa & Bánh Mì",
+    pricePerPerson: 449_000,
+    availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    icon: "cocoa",
+
+    highlights: COCOA_HIGHLIGHTS,
+    description: COCOA_DESCRIPTION,
+    includes: COCOA_INCLUDES,
+    excludes: ["Transportation to the workshop"],
+    notSuitableFor: ["Children under 6 years", "People over 95 years"],
+    meetingPoint: COCOA_MEETING_POINT,
+  },
+  {
+    id: "spring-roll",
+    name: "Fresh & Fried Spring Roll",
+    pricePerPerson: 499_000,
+    availableTimes: ["17:00"],
+    icon: "spring-roll",
+
+    highlights: SPRING_ROLL_HIGHLIGHTS,
+    description: SPRING_ROLL_DESCRIPTION,
+    includes: SPRING_ROLL_INCLUDES,
+    meetingPoint: SPRING_ROLL_MEETING_POINT,
+  },
+];
+
+export function getWorkshop(id: string): Workshop | undefined {
+  return WORKSHOPS.find((w) => w.id === id);
+}
+
+export type ClassTypeSlug = Workshop["icon"];
+
+/**
+ * One class page: the workshops that share a type, shown as its options.
+ * Content (highlights, description, includes, …) is shared by a type's
+ * options, so it is read from the first one.
+ */
+export type ClassType = {
+  slug: ClassTypeSlug;
+  /** Page title — the first option's name, e.g. "Coffee & Bánh Mì Workshop". */
+  title: string;
+  options: Workshop[];
+  fromPrice: number;
+  image?: string;
+  content: Workshop;
+};
+
+/** Derived from WORKSHOPS (never maintained by hand), in first-seen order. */
+export const CLASS_TYPES: ClassType[] = WORKSHOPS.reduce<ClassType[]>((types, w) => {
+  const existing = types.find((t) => t.slug === w.icon);
+  if (existing) {
+    existing.options.push(w);
+    existing.fromPrice = Math.min(existing.fromPrice, w.pricePerPerson);
+    existing.image ??= w.image;
+    return types;
+  }
+  types.push({
+    slug: w.icon,
+    title: w.name,
+    options: [w],
+    fromPrice: w.pricePerPerson,
+    image: w.image,
+    content: w,
+  });
+  return types;
+}, []);
+
+export function getClassType(slug: string): ClassType | undefined {
+  return CLASS_TYPES.find((t) => t.slug === slug);
+}
+
+/** The class type a workshop belongs to. */
+export function getClassTypeOf(workshopId: string): ClassType | undefined {
+  const workshop = getWorkshop(workshopId);
+  return workshop ? getClassType(workshop.icon) : undefined;
+}

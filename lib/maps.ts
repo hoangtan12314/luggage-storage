@@ -41,3 +41,11 @@ export function mapsEmbedUrl(): string {
 export function mapsLinkUrl(): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery())}`;
 }
+
+/**
+ * "Open in Google Maps" for an arbitrary address — used for the class meeting
+ * point, which is not the homestay in LOCATION.
+ */
+export function mapsSearchUrl(address: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}

@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
  * jumps to the landing page's service cards (there is no single booking
  * flow — luggage, rooms and classes each have their own).
  *
- * On the landing page (/ and /vi) the mobile header floats over the hero
+ * On the landing and classes pages (/, /vi, /classes, /vi/classes) the mobile header floats over the hero
  * photo and the desktop header takes the cream page colour; everywhere else
  * it is a plain white bar.
  */
@@ -25,7 +25,12 @@ export function SiteHeader({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const base = locale === "en" ? "" : "/vi";
   const nav = landingCopy[locale].nav;
-  const isHome = pathname === "/" || pathname === "/vi";
+  // Pages that open with a hero photo on the cream surface.
+  const isHome =
+    pathname === "/" ||
+    pathname === "/vi" ||
+    pathname === "/classes" ||
+    pathname === "/vi/classes";
 
   const links = [
     { href: `${base}/classes`, label: nav.cooking },

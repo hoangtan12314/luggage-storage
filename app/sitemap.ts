@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/config";
+import { CLASS_TYPES, SITE_URL } from "@/lib/config";
 
 /**
  * One entry per page per language, each with its own hreflang alternates
  * pointing at its own translation counterpart — not all pages cross-linked
- * to each other. Landing, luggage and rooms are three different pieces of
+ * to each other. Landing, luggage, rooms and classes are four different pieces of
  * content, each with an EN/VI pair.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -12,6 +12,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { en: "/", vi: "/vi" },
     { en: "/luggage", vi: "/vi/luggage" },
     { en: "/rooms", vi: "/vi/rooms" },
+    { en: "/classes", vi: "/vi/classes" },
+    ...CLASS_TYPES.map((t) => ({
+      en: `/classes/${t.slug}`,
+      vi: `/vi/classes/${t.slug}`,
+    })),
   ];
 
   const now = new Date();

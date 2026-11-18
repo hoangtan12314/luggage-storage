@@ -1,6 +1,6 @@
-import { getSizeConfig, LOCATION, ROOM } from "../config";
+import { getSizeConfig, getWorkshop, LOCATION, ROOM } from "../config";
 import { formatVnd } from "../money";
-import { describeDuration, quote, quoteRoom } from "../pricing";
+import { describeDuration, quote, quoteClass, quoteRoom } from "../pricing";
 import type { Booking } from "../types";
 
 function formatDateTime(iso: string) {
@@ -18,34 +18,79 @@ function formatDate(isoDate: string) {
   });
 }
 
+// Customer-supplied text goes into an HTML email the owner opens, so escape it.
+function esc(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 type LineItem = { label: string; breakdown: string; subtotal: string };
 
 /**
- * Builds the owner-notification email for a confirmed booking (luggage or
- * room). Reuses quote()/quoteRoom() for the breakdown rather than
- * re-deriving it by hand, so this can never disagree with what the customer
- * saw on checkout/confirmation.
+ * Builds the owner-notification email for a confirmed booking (luggage,
+ * room or class). Reuses quote()/quoteRoom()/quoteClass() for the breakdown
+ * rather than re-deriving it by hand, so this can never disagree with what
+ * the customer saw on checkout/confirmation.
  */
 export function buildBookingEmail(booking: Booking) {
   const isRoom = booking.kind === "room";
+  const isClass = booking.kind === "class";
+  const kindLabel = isClass ? "class" : isRoom ? "room" : "luggage";
 
-  const stayLine = isRoom
-    ? `Check-in: ${formatDate(booking.start)}\nCheck-out: ${formatDate(booking.end)}`
-    : `Drop off: ${formatDateTime(booking.start)}\nPick up: ${formatDateTime(booking.end)}`;
+  const classTime = booking.classTime ?? "";
+  const stayLine = isClass
+    ? `Date: ${formatDate(booking.start)}\nTime: ${classTime}`
+    : isRoom
+      ? `Check-in: ${formatDate(booking.start)}\nCheck-out: ${formatDate(booking.end)}`
+      : `Drop off: ${formatDateTime(booking.start)}\nPick up: ${formatDateTime(booking.end)}`;
 
-  const stayRows = isRoom
+  const stayRows = isClass
     ? [
-        ["Check-in", formatDate(booking.start)],
-        ["Check-out", formatDate(booking.end)],
+        ["Date", formatDate(booking.start)],
+        ["Time", classTime],
       ]
-    : [
-        ["Drop off", formatDateTime(booking.start)],
-        ["Pick up", formatDateTime(booking.end)],
-        ["Duration", describeDuration(booking.start, booking.end)],
-      ];
+    : isRoom
+      ? [
+          ["Check-in", formatDate(booking.start)],
+          ["Check-out", formatDate(booking.end)],
+        ]
+      : [
+          ["Drop off", formatDateTime(booking.start)],
+          ["Pick up", formatDateTime(booking.end)],
+          ["Duration", describeDuration(booking.start, booking.end)],
+        ];
+
+  // Phone and WhatsApp are both optional for classes (at least one given).
+  const contactRows: [string, string][] = [];
+  if (booking.customer.phone) contactRows.push(["Phone", booking.customer.phone]);
+  if (booking.customer.whatsapp) contactRows.push(["WhatsApp", booking.customer.whatsapp]);
+
+  const notes = booking.notes?.trim();
 
   let itemLines: LineItem[];
-  if (isRoom) {
+  if (isClass) {
+    const workshop = getWorkshop(booking.workshopId ?? "");
+    const priced = quoteClass(
+      {
+        id: booking.workshopId ?? "",
+        name: workshop?.name ?? "Cooking class",
+        pricePerPerson: booking.unitPrice ?? workshop?.pricePerPerson ?? 0,
+      },
+      booking.start,
+      classTime,
+      booking.people ?? 1
+    );
+    itemLines = [
+      {
+        label: `${priced.name} × ${priced.people}`,
+        breakdown: `${priced.people} ${priced.people > 1 ? "people" : "person"}: ${formatVnd(priced.pricePerPerson)} each`,
+        subtotal: formatVnd(priced.total),
+      },
+    ];
+  } else if (isRoom) {
     const priced = quoteRoom(booking.start, booking.end, booking.roomQuantity ?? 1);
     itemLines = [
       {
@@ -71,14 +116,15 @@ export function buildBookingEmail(booking: Booking) {
     });
   }
 
-  const subject = `New ${isRoom ? "room" : "luggage"} booking ${booking.ref} — ${formatVnd(booking.total)}`;
+  const subject = `New ${kindLabel} booking ${booking.ref} — ${formatVnd(booking.total)}`;
 
   const text = [
-    `New ${isRoom ? "room" : "luggage"} booking: ${booking.ref}`,
+    `New ${kindLabel} booking: ${booking.ref}`,
     "",
     `Customer: ${booking.customer.name}`,
     `Email: ${booking.customer.email}`,
-    `Phone: ${booking.customer.phone}`,
+    ...contactRows.map(([label, value]) => `${label}: ${value}`),
+    ...(notes ? [`Notes (allergies / dietary): ${notes}`] : []),
     "",
     stayLine,
     "",
@@ -91,13 +137,23 @@ export function buildBookingEmail(booking: Booking) {
 
   const html = `
     <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="margin-bottom: 4px;">New ${isRoom ? "room" : "luggage"} booking: ${booking.ref}</h2>
+      <h2 style="margin-bottom: 4px;">New ${kindLabel} booking: ${booking.ref}</h2>
       <p style="color: #666; margin-top: 0;">${LOCATION.name}</p>
 
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-        <tr><td style="color: #666; padding: 4px 0;">Customer</td><td style="text-align: right;">${booking.customer.name}</td></tr>
-        <tr><td style="color: #666; padding: 4px 0;">Email</td><td style="text-align: right;">${booking.customer.email}</td></tr>
-        <tr><td style="color: #666; padding: 4px 0;">Phone</td><td style="text-align: right;">${booking.customer.phone}</td></tr>
+        <tr><td style="color: #666; padding: 4px 0;">Customer</td><td style="text-align: right;">${esc(booking.customer.name)}</td></tr>
+        <tr><td style="color: #666; padding: 4px 0;">Email</td><td style="text-align: right;">${esc(booking.customer.email)}</td></tr>
+        ${contactRows
+          .map(
+            ([label, value]) =>
+              `<tr><td style="color: #666; padding: 4px 0;">${label}</td><td style="text-align: right;">${esc(value)}</td></tr>`
+          )
+          .join("")}
+        ${
+          notes
+            ? `<tr><td style="color: #666; padding: 4px 0; vertical-align: top;">Notes</td><td style="text-align: right;">${esc(notes)}</td></tr>`
+            : ""
+        }
         ${stayRows
           .map(
             ([label, value]) =>

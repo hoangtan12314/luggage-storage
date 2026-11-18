@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, BedDouble, ChefHat, Luggage } from "lucide-react";
+import { HeroPhoto } from "@/components/hero-photo";
 import type { LandingCopy } from "@/lib/i18n";
 
 /**
@@ -26,29 +26,7 @@ export function LandingHero({
 
   return (
     <section className="lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center">
-      <div className="relative h-[27rem] overflow-hidden sm:h-[30rem] lg:h-[30rem] lg:[border-radius:0_17%_31%_0/0_44%_56%_0]">
-        {/* Below lg the photo starts under the floating header (top-[4.5rem])
-            so the logo tile and menu button never cover the face; a fade
-            hides the seam. From lg up it fills the column. */}
-        <div className="absolute inset-x-0 top-[4.5rem] bottom-0 lg:inset-0">
-          <Image
-            src="/big-cover.jpg"
-            alt={hero.imageAlt}
-            fill
-            priority
-            sizes="(min-width: 1024px) 52vw, 100vw"
-            className="object-cover object-[35%_30%]"
-          />
-          <div
-            aria-hidden
-            className="from-cream absolute inset-x-0 top-0 h-16 bg-gradient-to-b to-transparent lg:hidden"
-          />
-        </div>
-        <div
-          aria-hidden
-          className="via-cream/70 to-cream absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent lg:hidden"
-        />
-      </div>
+      <HeroPhoto src="/big-cover.jpg" alt={hero.imageAlt} />
 
       <div className="relative -mt-12 px-6 pb-10 sm:px-10 lg:mt-0 lg:pl-12 lg:pr-8 lg:py-10">
         <p className="hidden items-center gap-5 text-sm font-medium tracking-[0.3em] text-cocoa lg:flex">

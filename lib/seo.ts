@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { LOCATION, ROOM, SITE_URL, SIZES } from "./config";
-import { copy, landingCopy, roomsCopy } from "./i18n";
+import { CLASS_TYPES, getClassType, LOCATION, ROOM, SITE_URL, SIZES } from "./config";
+import { classesCopy, copy, landingCopy, roomsCopy } from "./i18n";
 import { mapsLinkUrl } from "./maps";
+import { localizeWorkshop } from "./i18n/class-content";
 import type { Locale } from "./i18n";
 
 /**
@@ -74,6 +75,11 @@ export function buildLuggageMetadata(locale: Locale): Metadata {
 /** Metadata for the "/rooms" page. */
 export function buildRoomsMetadata(locale: Locale): Metadata {
   return buildPageMetadata(locale, "/rooms", "/vi/rooms", roomsCopy[locale].meta);
+}
+
+/** Metadata for the "/classes" cooking-classes page. */
+export function buildClassesMetadata(locale: Locale): Metadata {
+  return buildPageMetadata(locale, "/classes", "/vi/classes", classesCopy[locale].meta);
 }
 
 /** Marks a route non-indexable — used by checkout and booking confirmation,
@@ -209,6 +215,90 @@ export function buildLodgingJsonLd(locale: Locale) {
       "@type": "LocationFeatureSpecification",
       name,
       value: true,
+    })),
+  };
+}
+
+const classProvider = (address: string) => ({
+  "@type": "LocalBusiness",
+  name: LOCATION.name,
+  telephone: LOCATION.phone,
+  address: { "@type": "PostalAddress", streetAddress: address, addressCountry: LOCATION.country },
+});
+
+/**
+ * Cooking-class list structured data: an ItemList of the class types, each
+ * with a VND price range across its options. Built from CLASS_TYPES so it can
+ * never disagree with what the page shows. No ratings or reviews — the
+ * on-site page has none (GetYourGuide's are theirs, not ours to republish).
+ */
+export function buildClassesJsonLd(locale: Locale) {
+  const base = locale === "en" ? "" : "/vi";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${LOCATION.name} — Cooking classes`,
+    url: `${SITE_URL}${base}/classes`,
+    itemListElement: CLASS_TYPES.map((type, index) => {
+      const prices = type.options.map((o) => o.pricePerPerson);
+      return {
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Service",
+          name: type.title,
+          url: `${SITE_URL}${base}/classes/${type.slug}`,
+          offers: {
+            "@type": "AggregateOffer",
+            priceCurrency: "VND",
+            lowPrice: Math.min(...prices),
+            highPrice: Math.max(...prices),
+            offerCount: type.options.length,
+          },
+        },
+      };
+    }),
+  };
+}
+
+/** Metadata for one class type page ("/classes/coffee", …). */
+export function buildClassTypeMetadata(locale: Locale, slug: string): Metadata {
+  const type = getClassType(slug);
+  if (!type) return {};
+  const text = localizeWorkshop(type.content, locale);
+  // First sentence of the description, trimmed to a search-snippet length.
+  const first = text.description.split(/(?<=[.!?。])\s/)[0];
+  const description = first.length > 160 ? `${first.slice(0, 157)}…` : first;
+  const suffix = locale === "en" ? "Cooking Class in District 1" : "Lớp nấu ăn tại Quận 1";
+  return buildPageMetadata(locale, `/classes/${slug}`, `/vi/classes/${slug}`, {
+    title: `${type.title} — ${suffix} | Ngõ Saigon`,
+    description,
+  });
+}
+
+/** Structured data for one class type: a Service with an Offer per option. */
+export function buildClassTypeJsonLd(locale: Locale, slug: string) {
+  const type = getClassType(slug);
+  if (!type) return null;
+  const base = locale === "en" ? "" : "/vi";
+  const url = `${SITE_URL}${base}/classes/${type.slug}`;
+  const text = localizeWorkshop(type.content, locale);
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: type.title,
+    description: text.description,
+    url,
+    provider: classProvider(type.content.meetingPoint.address),
+    areaServed: ["District 1", "Ho Chi Minh City"],
+    offers: type.options.map((o) => ({
+      "@type": "Offer",
+      name: o.name,
+      price: o.pricePerPerson,
+      priceCurrency: "VND",
+      url,
     })),
   };
 }

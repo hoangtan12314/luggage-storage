@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { getSizeConfig, ROOM } from "./config";
+import { classDateBounds } from "./class-dates";
+import { CLASS_SEATS_PER_SESSION, getSizeConfig, getWorkshop, ROOM } from "./config";
 import type { BookingItem } from "./types";
 
 export const lockerSizeSchema = z.enum(["small", "large"]);
@@ -103,3 +104,90 @@ export const customerSchema = z.object({
 });
 
 export type CustomerInput = z.infer<typeof customerSchema>;
+
+/**
+ * Class selection: which workshop, on which date, at which start time, for
+ * how many people. Untrusted input like the other selection schemas — the
+ * time must be one the chosen workshop actually offers, and the date must
+ * fall inside the bookable window in the shop's timezone.
+ */
+export const classSelectionSchema = z
+  .object({
+    workshopId: z.string().min(1, "Choose a class"),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date"),
+    time: z.string().regex(/^\d{2}:\d{2}$/, "Choose a time"),
+    people: z.coerce
+      .number()
+      .int()
+      .min(1, "Choose at least 1 person")
+      .max(CLASS_SEATS_PER_SESSION, `At most ${CLASS_SEATS_PER_SESSION} people per booking`),
+  })
+  .superRefine((val, ctx) => {
+    const workshop = getWorkshop(val.workshopId);
+    if (!workshop) {
+      ctx.addIssue({ code: "custom", message: "Choose a class", path: ["workshopId"] });
+      return;
+    }
+    if (!workshop.availableTimes.includes(val.time)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Choose one of the available times",
+        path: ["time"],
+      });
+    }
+    const { min, max } = classDateBounds();
+    if (val.date < min) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Classes can be booked from tomorrow — call us for same-day",
+        path: ["date"],
+      });
+    } else if (val.date > max) {
+      ctx.addIssue({
+        code: "custom",
+        message: "That date is too far ahead — choose a nearer date",
+        path: ["date"],
+      });
+    }
+  });
+
+export type ClassSelectionInput = z.infer<typeof classSelectionSchema>;
+
+// Digits plus the punctuation people actually type in phone numbers.
+const phoneField = z
+  .string()
+  .trim()
+  .min(7, "Enter a valid number")
+  .max(20, "Enter a valid number")
+  .regex(/^\+?[\d\s().-]+$/, "Enter a valid number");
+
+// An empty or missing input means "not provided", not "invalid".
+const optionalPhone = z.preprocess(
+  (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+  phoneField.optional()
+);
+
+/**
+ * Class guests may leave either phone or WhatsApp blank, but not both — the
+ * owner needs some way to reach them. The group error lives on the
+ * `contact` path so the form can show it once beside both fields.
+ */
+export const classCustomerSchema = z
+  .object({
+    name: z.string().trim().min(2, "Enter your full name"),
+    email: z.email("Enter a valid email address"),
+    phone: optionalPhone,
+    whatsapp: optionalPhone,
+  })
+  .refine((val) => val.phone || val.whatsapp, {
+    message: "Enter a phone number or a WhatsApp number",
+    path: ["contact"],
+  });
+
+export type ClassCustomerInput = z.infer<typeof classCustomerSchema>;
+
+/** Optional free text from the guest (allergies, dietary needs). */
+export const classNotesSchema = z.preprocess(
+  (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+  z.string().trim().max(500, "Please keep notes under 500 characters").optional()
+);

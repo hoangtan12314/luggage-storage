@@ -5,10 +5,10 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/luggage", "/rooms", "/vi", "/vi/luggage", "/vi/rooms"],
+      allow: ["/", "/luggage", "/rooms", "/classes", "/vi", "/vi/luggage", "/vi/rooms", "/vi/classes"],
       // Checkout and booking confirmation carry guest personal details and
       // must never be crawled — see the noindex meta on those pages too.
-      disallow: ["/checkout", "/booking/"],
+      disallow: ["/checkout", "/booking/", "/classes/reserve", "/vi/classes/reserve"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

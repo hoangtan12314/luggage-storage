@@ -25,12 +25,16 @@ export function SiteHeader({ locale }: { locale: Locale }) {
   const pathname = usePathname();
   const base = locale === "en" ? "" : "/vi";
   const nav = landingCopy[locale].nav;
-  // Pages that open with a hero photo on the cream surface.
+  // Pages that open with a hero photo on the cream surface: the mobile header
+  // floats over the photo.
   const isHome =
     pathname === "/" ||
     pathname === "/vi" ||
     pathname === "/classes" ||
     pathname === "/vi/classes";
+  // The classes sub-pages (a class, the reserve form) sit on the same cream
+  // surface but have no hero photo, so their header is a normal in-flow bar.
+  const isCreamPage = pathname.startsWith("/classes/") || pathname.startsWith("/vi/classes/");
 
   const links = [
     { href: `${base}/classes`, label: nav.cooking },
@@ -50,7 +54,9 @@ export function SiteHeader({ locale }: { locale: Locale }) {
       className={cn(
         isHome
           ? "absolute inset-x-0 top-0 z-30 lg:static lg:border-b lg:border-cocoa/10 lg:bg-cream"
-          : "border-b bg-white"
+          : isCreamPage
+            ? "border-b border-cocoa/10 bg-cream"
+            : "border-b bg-white"
       )}
     >
       <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-6 px-4 py-3 sm:px-6 lg:px-14 lg:py-5">

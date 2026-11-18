@@ -13,7 +13,9 @@ import type { Locale } from "./i18n";
 export function buildBaseMetadata(): Metadata {
   return {
     metadataBase: new URL(SITE_URL),
-    icons: { icon: "/favicon.ico" },
+    // The square brand logo. The default app/favicon.ico was removed so the
+    // two can't compete (Next also auto-links a file-convention favicon).
+    icons: { icon: "/logo-square.jpeg", apple: "/logo-square.jpeg" },
   };
 }
 

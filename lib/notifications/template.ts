@@ -1,4 +1,11 @@
-import { getSizeConfig, getWorkshop, LOCATION, ROOM } from "../config";
+import {
+  getCampus,
+  getMeetingAddress,
+  getSizeConfig,
+  getWorkshop,
+  LOCATION,
+  ROOM,
+} from "../config";
 import { formatVnd } from "../money";
 import { describeDuration, quote, quoteClass, quoteRoom } from "../pricing";
 import type { Booking } from "../types";
@@ -70,6 +77,14 @@ export function buildBookingEmail(booking: Booking) {
 
   const notes = booking.notes?.trim();
 
+  // Where the owner should expect the guest: a class meets at its campus
+  // (Campus 1), everything else at the homestay.
+  const meetingPoint = isClass ? getWorkshop(booking.workshopId ?? "")?.meetingPoint : undefined;
+  const campusName = getCampus(meetingPoint?.campus)?.name;
+  const placeLine = meetingPoint
+    ? `${campusName ? `${campusName}: ` : ""}${getMeetingAddress(meetingPoint, "en")}`
+    : `${LOCATION.name}, ${LOCATION.address}`;
+
   let itemLines: LineItem[];
   if (isClass) {
     const workshop = getWorkshop(booking.workshopId ?? "");
@@ -132,7 +147,7 @@ export function buildBookingEmail(booking: Booking) {
     "",
     `Total: ${formatVnd(booking.total)}`,
     "",
-    `${LOCATION.name}, ${LOCATION.address}`,
+    placeLine,
   ].join("\n");
 
   const html = `
@@ -185,7 +200,7 @@ export function buildBookingEmail(booking: Booking) {
         <tr><td>Total</td><td style="text-align: right; color: #f9a61c;">${formatVnd(booking.total)}</td></tr>
       </table>
 
-      <p style="color: #999; font-size: 12px; margin-top: 24px;">${LOCATION.address}</p>
+      <p style="color: #999; font-size: 12px; margin-top: 24px;">${esc(placeLine)}</p>
     </div>
   `;
 

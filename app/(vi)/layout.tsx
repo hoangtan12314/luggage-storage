@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { buildBaseMetadata } from "@/lib/seo";
@@ -10,6 +11,13 @@ import "../globals.css";
 const montserrat = Montserrat({
   variable: "--font-montserrat",
   subsets: ["latin", "vietnamese"],
+});
+
+// Script face for the "Ngõ Saigon" eyebrow on the landing/classes heroes (file in /public/fonts).
+const spiritualMountain = localFont({
+  src: "../../public/fonts/Spiritual Mountain.ttf",
+  variable: "--font-spiritual",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -35,7 +43,7 @@ export default function VietnameseRootLayout({
   return (
     <html
       lang="vi"
-      className={`${montserrat.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${spiritualMountain.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SiteHeader locale="vi" />

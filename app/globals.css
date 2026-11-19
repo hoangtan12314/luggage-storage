@@ -182,4 +182,5 @@
   --color-cocoa-muted: var(--cocoa-muted);
   --color-gold: var(--gold);
   --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-spiritual), var(--font-montserrat), cursive;
 }

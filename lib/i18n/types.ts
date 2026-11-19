@@ -22,9 +22,14 @@ export type HomeCopy = {
     description: string;
   };
   hero: {
+    /** Small label above the headline. */
+    eyebrow: string;
     h1: string;
     subhead: string;
+    /** Longer keyword-rich sentence, shown in the intro section below the hero. */
     tagline: string;
+    /** Three short trust points shown as icons under the subhead (desktop). */
+    trust: [string, string, string];
   };
   intro: string;
   /** Static safety/security line under the address & hours (which come from LOCATION). */
@@ -84,6 +89,18 @@ export type LandingCopy = {
     exploreCta: string;
     imageAlt: string;
   };
+  footer: {
+    /** "Since {year}" */
+    since: string;
+    rights: string;
+    campuses: string;
+    follow: string;
+    opensNewTab: string;
+  };
+  /** One-line description of what each campus is for ("Cooking classes"). */
+  campuses: {
+    notes: { "campus-1": string; "campus-2": string };
+  };
   services: {
     cooking: ServiceCardCopy;
     rooms: ServiceCardCopy;
@@ -135,9 +152,14 @@ export type ClassesCopy = {
     meetingPoint: string;
     openInMaps: string;
     knowBeforeYouGo: string;
+    album: { label: string; previous: string; next: string; open: string };
     allergyNote: string;
     cancellationNote: string;
+    /** "{n} hour" / "{n} hours" — one class's length. */
+    hourOne: string;
+    hourMany: string;
     facts: {
+      /** "{min}–{max} hours" — shown when a type's options differ in length. */
       duration: string;
       smallGroup: string;
       cancellation: string;
@@ -187,6 +209,7 @@ export type ClassesCopy = {
     notesHelp: string;
     summary: {
       heading: string;
+      duration: string;
       date: string;
       time: string;
       guests: string;

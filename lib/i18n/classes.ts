@@ -12,7 +12,7 @@ const en: ClassesCopy = {
     intro:
       "Make Vietnamese coffee, cocoa, bánh mì and spring rolls with your own hands, in the heart of District 1. Every class seats at most 5 guests.",
     reserveCta: "See the classes",
-    imageAlt: "A smiling guest holding a bánh mì she just made in a Ngõ Saigon cooking class",
+    imageAlt: "A guest pouring hot water over a Vietnamese coffee filter at the counter of a Ngõ Saigon cooking class",
   },
   list: {
     heading: "Our classes",
@@ -34,10 +34,18 @@ const en: ClassesCopy = {
     meetingPoint: "Meeting point",
     openInMaps: "Open in Google Maps",
     knowBeforeYouGo: "Know before you go",
+    album: {
+      label: "Photos from this class",
+      previous: "Previous photo",
+      next: "Next photo",
+      open: "Open photo {n} of {total}",
+    },
     allergyNote:
       "Please let us know in advance if you have any allergies or dietary restrictions — you can add a note when you reserve.",
     cancellationNote:
       "Free cancellation up to {hours} hours before the class. To cancel or change a reservation, call or message us on {phone}.",
+    hourOne: "{n} hour",
+    hourMany: "{n} hours",
     facts: {
       duration: "{min}–{max} hours",
       smallGroup: "Small group · up to {n} guests",
@@ -89,6 +97,7 @@ const en: ClassesCopy = {
     notesHelp: "Optional. Tell us anything we should prepare for.",
     summary: {
       heading: "Your reservation",
+      duration: "Duration",
       date: "Date",
       time: "Time",
       guests: "Guests",
@@ -128,7 +137,7 @@ const vi: ClassesCopy = {
     intro:
       "Tự tay làm cà phê, ca cao, bánh mì và gỏi cuốn ngay giữa lòng Quận 1. Mỗi lớp nhận tối đa 5 khách.",
     reserveCta: "Xem các lớp học",
-    imageAlt: "Một vị khách đang mỉm cười cầm chiếc bánh mì vừa làm trong lớp nấu ăn tại Ngõ Saigon",
+    imageAlt: "Một vị khách rót nước nóng pha cà phê phin tại quầy trong lớp nấu ăn của Ngõ Saigon",
   },
   list: {
     heading: "Các lớp học",
@@ -150,10 +159,18 @@ const vi: ClassesCopy = {
     meetingPoint: "Điểm hẹn",
     openInMaps: "Mở trong Google Maps",
     knowBeforeYouGo: "Lưu ý trước khi đến",
+    album: {
+      label: "Hình ảnh từ lớp học",
+      previous: "Ảnh trước",
+      next: "Ảnh tiếp theo",
+      open: "Mở ảnh {n} trên {total}",
+    },
     allergyNote:
       "Vui lòng cho chúng tôi biết trước nếu bạn bị dị ứng hoặc có chế độ ăn kiêng — bạn có thể ghi chú khi đặt chỗ.",
     cancellationNote:
       "Miễn phí hủy trước giờ học {hours} tiếng. Để hủy hoặc đổi lịch, vui lòng gọi hoặc nhắn tin cho chúng tôi theo số {phone}.",
+    hourOne: "{n} giờ",
+    hourMany: "{n} giờ",
     facts: {
       duration: "{min}–{max} giờ",
       smallGroup: "Nhóm nhỏ · tối đa {n} khách",
@@ -205,6 +222,7 @@ const vi: ClassesCopy = {
     notesHelp: "Không bắt buộc. Cho chúng tôi biết điều cần chuẩn bị.",
     summary: {
       heading: "Đặt chỗ của bạn",
+      duration: "Thời lượng",
       date: "Ngày",
       time: "Giờ",
       guests: "Số khách",

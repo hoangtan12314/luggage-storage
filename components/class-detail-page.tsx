@@ -1,13 +1,22 @@
 import Link from "next/link";
 import { CalendarCheck, ChevronRight, Clock, Languages, Users } from "lucide-react";
+import { AlbumCarousel } from "@/components/album-carousel";
 import { AvailabilityCard } from "@/components/availability-card";
 import { CheckList } from "@/components/check-list";
 import { ClassCover } from "@/components/class-cover";
 import { MeetingPoint } from "@/components/meeting-point";
 import { StickyBookBar } from "@/components/sticky-book-bar";
-import { CLASS_FACTS, CLASS_SEATS_PER_SESSION, LOCATION } from "@/lib/config";
+import {
+  CLASS_FACTS,
+  CLASS_SEATS_PER_SESSION,
+  getCampus,
+  getMeetingAddress,
+  LOCATION,
+} from "@/lib/config";
+import { getAlbum } from "@/lib/albums";
 import { cn } from "@/lib/utils";
 import type { ClassType } from "@/lib/config";
+import { formatDurationRange, formatHours } from "@/lib/class-format";
 import { classesCopy } from "@/lib/i18n";
 import { localizeWorkshop } from "@/lib/i18n/class-content";
 import type { Locale } from "@/lib/i18n";
@@ -26,20 +35,24 @@ const fill = (template: string, values: Record<string, string | number>) =>
  * "check availability" booking card beside it (sticky on desktop, inline on
  * mobile with a bottom bar that returns to it).
  */
-export function ClassDetailPage({ type, locale }: { type: ClassType; locale: Locale }) {
+export async function ClassDetailPage({ type, locale }: { type: ClassType; locale: Locale }) {
   const c = classesCopy[locale];
+  // Photos dropped into public/albums/<slug>/ replace the single cover photo.
+  const album = await getAlbum(type.slug, type.title);
   const base = locale === "en" ? "" : "/vi";
   const text = localizeWorkshop(type.content, locale);
   const { meetingPoint } = type.content;
-  const numberLocale = locale === "vi" ? "vi-VN" : "en-US";
 
   const facts = [
     {
       icon: Clock,
-      label: fill(c.detail.facts.duration, {
-        min: CLASS_FACTS.durationMinHours.toLocaleString(numberLocale),
-        max: CLASS_FACTS.durationMaxHours.toLocaleString(numberLocale),
-      }),
+      // One length for a single-option class, "1–3 hours" when a type's
+      // options differ (the 1-hour and 3-hour coffee classes).
+      label: formatDurationRange(
+        type.options.map((o) => o.durationHours),
+        { ...c.detail, range: c.detail.facts.duration },
+        locale
+      ),
     },
     {
       icon: Users,
@@ -64,9 +77,9 @@ export function ClassDetailPage({ type, locale }: { type: ClassType; locale: Loc
       )}
 
       <div className="mx-auto max-w-[1200px] px-4 pt-6 pb-16 sm:px-6 lg:px-10 lg:pt-10 lg:pb-20">
-        <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[1fr_400px]">
+        <div className="grid gap-x-10 gap-y-8 lg:grid-cols-[minmax(0,1fr)_400px]">
           {/* Header: breadcrumb, title, facts, cover photo */}
-          <div>
+          <div className="min-w-0">
             <nav aria-label="Breadcrumb" className="text-cocoa-muted flex items-center gap-1.5 text-sm">
               <Link href={`${base}/classes`} className="hover:text-cocoa underline-offset-4 hover:underline">
                 {c.detail.breadcrumb}
@@ -90,23 +103,29 @@ export function ClassDetailPage({ type, locale }: { type: ClassType; locale: Loc
               ))}
             </ul>
 
-            {/* A class with no photo gets a shorter icon panel so the page doesn't open on a big empty block. */}
-            <div
-              className={cn(
-                "relative mt-6 overflow-hidden rounded-3xl border border-white/70 shadow-[0_8px_30px_-12px_rgba(90,55,20,0.25)]",
-                type.image ? "aspect-[16/10]" : "aspect-[16/7] sm:aspect-[16/6]"
-              )}
-            >
-              <ClassCover
-                slug={type.slug}
-                image={type.image}
-                alt={type.image ? type.title : ""}
-                sizes="(min-width: 1200px) 740px, (min-width: 1024px) 60vw, 100vw"
-                priority
-                className="object-[30%_50%]"
-                iconClassName="size-28"
-              />
-            </div>
+            {album.length > 0 ? (
+              <div className="mt-6">
+                <AlbumCarousel photos={album} copy={c.detail.album} />
+              </div>
+            ) : (
+              /* A class with no photo gets a shorter icon panel so the page doesn't open on a big empty block. */
+              <div
+                className={cn(
+                  "relative mt-6 overflow-hidden rounded-3xl border border-white/70 shadow-[0_8px_30px_-12px_rgba(90,55,20,0.25)]",
+                  type.image ? "aspect-[16/10]" : "aspect-[16/7] sm:aspect-[16/6]"
+                )}
+              >
+                <ClassCover
+                  slug={type.slug}
+                  image={type.image}
+                  alt={type.image ? type.title : ""}
+                  sizes="(min-width: 1200px) 740px, (min-width: 1024px) 60vw, 100vw"
+                  priority
+                  className="object-[30%_50%]"
+                  iconClassName="size-28"
+                />
+              </div>
+            )}
           </div>
 
           {/* Booking card: right column on desktop, after the photo on mobile */}
@@ -118,6 +137,7 @@ export function ClassDetailPage({ type, locale }: { type: ClassType; locale: Loc
                 name: o.name,
                 pricePerPerson: o.pricePerPerson,
                 availableTimes: o.availableTimes,
+                durationLabel: formatHours(o.durationHours, c.detail, locale),
               }))}
               fromPrice={type.fromPrice}
               copy={c.availability}
@@ -155,7 +175,8 @@ export function ClassDetailPage({ type, locale }: { type: ClassType; locale: Loc
 
             <Section title={c.detail.meetingPoint}>
               <MeetingPoint
-                address={meetingPoint.address}
+                address={getMeetingAddress(meetingPoint, locale)}
+                label={getCampus(meetingPoint.campus)?.name}
                 details={meetingPoint.details}
                 openInMaps={c.detail.openInMaps}
               />

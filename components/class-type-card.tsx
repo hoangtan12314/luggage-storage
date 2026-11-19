@@ -32,10 +32,10 @@ export function ClassTypeCard({ type, highlight, copy, href }: ClassTypeCardProp
       <div className="absolute inset-y-0 left-0 w-[38%] sm:w-[34%] lg:w-[40%] lg:[mask-image:linear-gradient(to_right,black_60%,transparent)]">
         <ClassCover
           slug={type.slug}
-          image={type.image}
+          image={type.poster}
           alt=""
           sizes="(min-width: 1024px) 18vw, 38vw"
-          className="object-[20%_50%] transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
+          className="object-[0%_40%] transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
         />
       </div>
 

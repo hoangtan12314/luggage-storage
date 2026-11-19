@@ -1,3 +1,4 @@
+import type { Locale } from "./i18n/types";
 import type { LockerSize } from "./types";
 
 // The single source of truth for the site's canonical URL. Everything that
@@ -6,10 +7,35 @@ import type { LockerSize } from "./types";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
 
+/**
+ * Vietnamese pages are temporarily switched off. While this is false the
+ * language switcher is hidden everywhere (header, mobile menu, footer), /vi
+ * and /vi/* redirect to their English counterparts (next.config.ts), and /vi
+ * is left out of the sitemap and hreflang alternates. The Vietnamese pages and
+ * copy are all still in the repo — set this to true to bring them back.
+ */
+export const VIETNAMESE_ENABLED = false;
+
+export type LocalizedText = Record<Locale, string>;
+
+// Full addresses (no abbreviations), in the language of the page. TODO: the
+// owner's data names Campus 2's ward as "Ben Thanh" and Campus 1's as "Pham Ngu
+// Lao" — confirm both ward names.
+const CAMPUS_1_ADDRESS: LocalizedText = {
+  en: "104/23 Bui Vien, Pham Ngu Lao Ward, District 1, Ho Chi Minh City, Vietnam",
+  vi: "104/23 Bùi Viện, Phường Phạm Ngũ Lão, Quận 1, Thành phố Hồ Chí Minh, Việt Nam",
+};
+
+const CAMPUS_2_ADDRESS: LocalizedText = {
+  en: "199/14 De Tham, Ben Thanh Ward, District 1, Ho Chi Minh City, Vietnam",
+  vi: "199/14 Đề Thám, Phường Bến Thành, Quận 1, Thành phố Hồ Chí Minh, Việt Nam",
+};
+
 export const LOCATION = {
   name: "Ngõ Saigon Homestay",
   shortName: "Ngõ Saigon",
-  address: "199/14 De Tham, Ben Thanh, HCM",
+  // English; Campus 2 (the homestay). Per-language text: CAMPUS_2.address.
+  address: CAMPUS_2_ADDRESS.en,
   street: "199/14 De Tham",
   district: "District 1",
   city: "Ho Chi Minh City",
@@ -36,6 +62,71 @@ export const LOCATION = {
 export const MAP: { coords: { lat: number; lng: number } | null } = {
   coords: null,
 };
+
+export type CampusId = "campus-1" | "campus-2";
+
+export type Campus = {
+  id: CampusId;
+  name: string;
+  /** Full address in each language. */
+  address: LocalizedText;
+};
+
+/**
+ * The shop's two locations. Campus 1 is where the cooking classes meet;
+ * Campus 2 is the existing homestay (rooms and luggage storage, i.e.
+ * LOCATION). Both share LOCATION's phone and opening hours — TODO: add
+ * per-campus phone/hours/coordinates here if they ever differ.
+ */
+export const CAMPUS_1: Campus = {
+  id: "campus-1",
+  name: "Campus 1",
+  address: CAMPUS_1_ADDRESS,
+};
+
+export const CAMPUS_2: Campus = {
+  id: "campus-2",
+  name: "Campus 2",
+  address: CAMPUS_2_ADDRESS,
+};
+
+export const CAMPUSES: Campus[] = [CAMPUS_1, CAMPUS_2];
+
+/** The year the shop opened — shown as "Since 2021" and in the © range. */
+export const ESTABLISHED_YEAR = 2021;
+
+export type SocialId = "facebook" | "instagram" | "getyourguide" | "klook";
+
+/**
+ * Where else the shop can be found. A link with an empty `url` is simply not
+ * shown, so nothing in the footer ever points at a placeholder.
+ *
+ * TODO: add the Facebook, Instagram and Klook URLs. The GetYourGuide link is
+ * the owner's spring-roll listing (tracking parameters removed); swap it for
+ * the provider page if there is one.
+ */
+export const SOCIAL_LINKS: { id: SocialId; label: string; url: string }[] = [
+  { id: "facebook", label: "Facebook", url: "" },
+  { id: "instagram", label: "Instagram", url: "" },
+  {
+    id: "getyourguide",
+    label: "GetYourGuide",
+    url: "https://www.getyourguide.com/ho-chi-minh-city-l272/ho-chi-minh-city-vietnamese-spring-roll-cooking-class-t1092649/",
+  },
+  { id: "klook", label: "Klook", url: "" },
+];
+
+/**
+ * Where a class meets: always one of the campuses, so the address follows the
+ * page's language like everywhere else.
+ */
+export function getMeetingAddress(meetingPoint: { campus: CampusId }, locale: Locale): string {
+  return getCampus(meetingPoint.campus)?.address[locale] ?? "";
+}
+
+export function getCampus(id: CampusId | undefined): Campus | undefined {
+  return CAMPUSES.find((c) => c.id === id);
+}
 
 export type SizeConfig = {
   id: LockerSize;
@@ -133,6 +224,8 @@ export type Workshop = {
   pricePerPerson: number;
   /** Start times, "HH:mm" in LOCATION.timezone. */
   availableTimes: string[];
+  /** How long the class lasts, in hours (e.g. 1, 2.5, 3). */
+  durationHours: number;
   /**
    * Cover photo under /public. Omit until the shop has a photo that
    * actually shows this class — the page falls back to an icon panel rather
@@ -154,7 +247,8 @@ export type Workshop = {
   notSuitableFor?: string[];
 
   meetingPoint: {
-    address: string;
+    /** Which campus the class meets at: its name and address come from CAMPUSES. */
+    campus: CampusId;
     details?: string;
   };
 };
@@ -167,16 +261,13 @@ export type Workshop = {
 export const CLASS_SEATS_PER_SESSION = 5;
 
 /**
- * Facts shown on every class page. TODO: these come from the owner's
- * GetYourGuide listing (the spring-roll class) and are applied to all types
- * until per-class values exist — confirm the duration for the coffee and
- * cocoa classes. Free cancellation is a policy statement only: there is no
- * cancel feature, guests call or message the shop. The wording (and the
- * languages the instructor speaks) lives in lib/i18n/classes.ts.
+ * Facts shown on every class page. TODO: free cancellation and the languages
+ * the instructor speaks (wording in lib/i18n/classes.ts) come from the owner's
+ * GetYourGuide listing and apply to every class. Free cancellation is a
+ * policy statement only: there is no cancel feature, guests call or message
+ * the shop. Durations are per workshop (`Workshop.durationHours`).
  */
 export const CLASS_FACTS = {
-  durationMinHours: 1.5,
-  durationMaxHours: 2.5,
   freeCancellationHours: 24,
 } as const;
 
@@ -243,19 +334,10 @@ const COCOA_DESCRIPTION =
 const SPRING_ROLL_DESCRIPTION =
   "Step into Ngõ Saigon, a cozy corner in Saigon inspired by the charm of Hanoi’s hidden alleys, for a hands-on no-fire dinner experience. Start by exploring fresh herbs, crisp vegetables, tender rice noodles, and pre-prepared proteins carefully selected to create the perfect Vietnamese spring rolls. Under the guidance of your instructor, learn to prepare fresh spring rolls and master three legendary dipping sauces.";
 
-// Same place, formatted differently by the owner. TODO: unify. Note this is
-// NOT the homestay address in LOCATION (De Tham) — classes meet on Bùi Viện.
-const COFFEE_MEETING_POINT = {
-  address: "104/23 Bùi Viện, Bến Thành, Hồ Chí Minh, Vietnam",
-};
-
-const COCOA_MEETING_POINT = {
-  address: "104/23 Bùi Viện, Bến Thành, Hồ Chí Minh, Vietnam",
-};
-
-const SPRING_ROLL_MEETING_POINT = {
-  address:
-    "104/23 Bùi Viện, Phường Phạm Ngũ Lão, Quận 1, Thành phố Hồ Chí Minh, Vietnam",
+// All classes meet at Campus 1 (Bùi Viện) — NOT the homestay in LOCATION. The
+// owner's text formatted this address two ways; it is now one constant.
+const CLASS_MEETING_POINT = {
+  campus: CAMPUS_1.id,
 };
 
 /** The shop's cooking workshops, exactly as the owner supplied them. */
@@ -265,6 +347,7 @@ export const WORKSHOPS: Workshop[] = [
     name: "Coffee & Bánh Mì Workshop",
     pricePerPerson: 219_000,
     availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    durationHours: 1,
     image: "/cooking-class-service.jpg",
     icon: "coffee",
 
@@ -273,13 +356,14 @@ export const WORKSHOPS: Workshop[] = [
     includes: COFFEE_INCLUDES,
     excludes: ["Transportation to the workshop"],
     notSuitableFor: ["Children under 6 years", "People over 95 years"],
-    meetingPoint: COFFEE_MEETING_POINT,
+    meetingPoint: CLASS_MEETING_POINT,
   },
   {
     id: "four-types-coffee",
     name: "4 Types Coffee & Bánh Mì",
     pricePerPerson: 449_000,
     availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    durationHours: 3,
     image: "/cooking-class-service.jpg",
     icon: "coffee",
 
@@ -288,13 +372,14 @@ export const WORKSHOPS: Workshop[] = [
     includes: COFFEE_INCLUDES,
     excludes: ["Transportation to the workshop"],
     notSuitableFor: ["Children under 6 years", "People over 95 years"],
-    meetingPoint: COFFEE_MEETING_POINT,
+    meetingPoint: CLASS_MEETING_POINT,
   },
   {
     id: "cocoa-banh-mi",
     name: "Cocoa & Bánh Mì Workshop",
     pricePerPerson: 219_000,
     availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    durationHours: 1,
     icon: "cocoa",
 
     highlights: COCOA_HIGHLIGHTS,
@@ -302,13 +387,14 @@ export const WORKSHOPS: Workshop[] = [
     includes: COCOA_INCLUDES,
     excludes: ["Transportation to the workshop"],
     notSuitableFor: ["Children under 6 years", "People over 95 years"],
-    meetingPoint: COCOA_MEETING_POINT,
+    meetingPoint: CLASS_MEETING_POINT,
   },
   {
     id: "four-types-cocoa",
     name: "4 Types Cocoa & Bánh Mì",
     pricePerPerson: 449_000,
     availableTimes: ["09:00", "11:00", "13:00", "15:00"],
+    durationHours: 3,
     icon: "cocoa",
 
     highlights: COCOA_HIGHLIGHTS,
@@ -316,19 +402,20 @@ export const WORKSHOPS: Workshop[] = [
     includes: COCOA_INCLUDES,
     excludes: ["Transportation to the workshop"],
     notSuitableFor: ["Children under 6 years", "People over 95 years"],
-    meetingPoint: COCOA_MEETING_POINT,
+    meetingPoint: CLASS_MEETING_POINT,
   },
   {
     id: "spring-roll",
     name: "Fresh & Fried Spring Roll",
     pricePerPerson: 499_000,
     availableTimes: ["17:00"],
+    durationHours: 2.5,
     icon: "spring-roll",
 
     highlights: SPRING_ROLL_HIGHLIGHTS,
     description: SPRING_ROLL_DESCRIPTION,
     includes: SPRING_ROLL_INCLUDES,
-    meetingPoint: SPRING_ROLL_MEETING_POINT,
+    meetingPoint: CLASS_MEETING_POINT,
   },
 ];
 
@@ -349,8 +436,18 @@ export type ClassType = {
   title: string;
   options: Workshop[];
   fromPrice: number;
+  /** Detail-page photo (the album, later). */
   image?: string;
+  /** Portrait poster shown on the class card in the /classes list. */
+  poster?: string;
   content: Workshop;
+};
+
+/** Card posters for the /classes list, one per class type (portrait, 3:4). */
+const CLASS_POSTERS: Record<ClassTypeSlug, string> = {
+  coffee: "/coffee-class-poster.jpg",
+  cocoa: "/cocoa-class-poster.jpg",
+  "spring-roll": "/springroll-class-poster.jpg",
 };
 
 /** Derived from WORKSHOPS (never maintained by hand), in first-seen order. */
@@ -368,6 +465,7 @@ export const CLASS_TYPES: ClassType[] = WORKSHOPS.reduce<ClassType[]>((types, w)
     options: [w],
     fromPrice: w.pricePerPerson,
     image: w.image,
+    poster: CLASS_POSTERS[w.icon],
     content: w,
   });
   return types;

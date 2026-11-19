@@ -25,11 +25,11 @@ export function LandingHero({
   ];
 
   return (
-    <section className="lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center">
+    <section className="mx-auto max-w-[1500px] lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center">
       <HeroPhoto src="/big-cover.jpg" alt={hero.imageAlt} />
 
       <div className="relative -mt-12 px-6 pb-10 sm:px-10 lg:mt-0 lg:pl-12 lg:pr-8 lg:py-10">
-        <p className="hidden items-center gap-5 text-sm font-medium tracking-[0.3em] text-cocoa lg:flex">
+        <p className="font-script hidden items-center gap-5 text-4xl text-cocoa lg:flex">
           {hero.eyebrow}
           <span aria-hidden className="h-px w-28 bg-cocoa/50" />
         </p>

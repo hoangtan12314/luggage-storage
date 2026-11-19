@@ -31,10 +31,15 @@ export function SiteHeader({ locale }: { locale: Locale }) {
     pathname === "/" ||
     pathname === "/vi" ||
     pathname === "/classes" ||
-    pathname === "/vi/classes";
+    pathname === "/vi/classes" ||
+    pathname === "/luggage" ||
+    pathname === "/vi/luggage";
   // The classes sub-pages (a class, the reserve form) sit on the same cream
   // surface but have no hero photo, so their header is a normal in-flow bar.
-  const isCreamPage = pathname.startsWith("/classes/") || pathname.startsWith("/vi/classes/");
+  const isCreamPage =
+    pathname.startsWith("/classes/") ||
+    pathname.startsWith("/vi/classes/") ||
+    pathname === "/checkout";
 
   const links = [
     { href: `${base}/classes`, label: nav.cooking },

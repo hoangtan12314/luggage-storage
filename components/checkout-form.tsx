@@ -1,11 +1,20 @@
 "use client";
 
-import { useActionState } from "react";
+import Link from "next/link";
+import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { createBooking } from "@/lib/actions";
 import { initialCreateBookingState } from "@/lib/booking-form-state";
 import { formatVnd } from "@/lib/money";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/form-field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+const fieldClass =
+  "mt-1.5 h-11 rounded-xl border-cocoa/20 bg-white/80 px-3.5 text-base text-cocoa md:text-base";
+
+type FieldKey = "name" | "email" | "phone";
 
 type CheckoutFormProps = {
   /**
@@ -18,62 +27,182 @@ type CheckoutFormProps = {
   hidden: Record<string, string>;
   total: number;
   disabled?: boolean;
+  /** The order summary (server-rendered), shown beside the form. */
+  summary: React.ReactNode;
+  /** Where "Change" sends the guest to adjust their selection. */
+  backHref: string;
 };
 
-export function CheckoutForm({ hidden, total, disabled }: CheckoutFormProps) {
+/**
+ * Guest details for a luggage or room reservation, with the order summary and
+ * the submit button in a sticky card beside it (below on mobile).
+ *
+ * The server action is dispatched manually rather than via <form action>:
+ * React resets a form after its action runs, which would wipe everything the
+ * guest typed whenever the server rejects it. Errors are summarised at the top
+ * (focused after a failed attempt, each linking to its field) and repeated
+ * inline; nothing shows before the guest leaves a field or tries to submit.
+ */
+export function CheckoutForm({ hidden, total, disabled, summary, backHref }: CheckoutFormProps) {
   const [state, formAction, pending] = useActionState(
     createBooking,
     initialCreateBookingState
   );
 
+  const [values, setValues] = useState<Record<FieldKey, string>>({ name: "", email: "", phone: "" });
+  const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
+  const [attempts, setAttempts] = useState(0);
+  const summaryRef = useRef<HTMLDivElement>(null);
+
+  const clientErrors = useMemo(() => {
+    const errors: Partial<Record<FieldKey, string>> = {};
+    if (values.name.trim().length < 2) errors.name = "Please enter your full name.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
+      errors.email = "Please enter a valid email address.";
+    if (!/^\+?[\d\s().-]{7,20}$/.test(values.phone.trim()))
+      errors.phone = "Please enter a valid phone number.";
+    return errors;
+  }, [values]);
+
+  const serverError = (key: string) => state.errors[key]?.[0];
+  const errorFor = (key: FieldKey): string | undefined =>
+    attempts > 0 || touched[key] ? (clientErrors[key] ?? serverError(key)) : undefined;
+
+  const fieldErrors = (Object.keys(clientErrors) as FieldKey[])
+    .map((key) => ({ key, message: errorFor(key) }))
+    .filter((e): e is { key: FieldKey; message: string } => !!e.message);
+  // Problems with the selection itself (no stock left, a tampered link) have no field.
+  const selectionError = state.message;
+  const hasSummary = fieldErrors.length > 0 || !!selectionError;
+
+  const set = (key: FieldKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setValues((v) => ({ ...v, [key]: e.target.value }));
+  const touch = (key: FieldKey) => setTouched((t) => ({ ...t, [key]: true }));
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setAttempts((n) => n + 1);
+    if (Object.keys(clientErrors).length > 0) return;
+
+    const data = new FormData();
+    for (const [name, value] of Object.entries(hidden)) data.set(name, value);
+    data.set("name", values.name);
+    data.set("email", values.email);
+    data.set("phone", values.phone);
+    startTransition(() => formAction(data));
+  }
+
+  // Move focus to the error summary after a failed attempt (client or server).
+  useEffect(() => {
+    if (attempts > 0 && hasSummary) summaryRef.current?.focus();
+    // Only when an attempt happens or the server answers, not on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempts, state]);
+
+  const fields: { key: FieldKey; label: string; type?: string; auto: string; inputMode?: "tel" }[] = [
+    { key: "name", label: "Full name", auto: "name" },
+    { key: "email", label: "Email", type: "email", auto: "email" },
+    { key: "phone", label: "Phone", type: "tel", auto: "tel", inputMode: "tel" },
+  ];
+
   return (
-    <form action={formAction} className="space-y-4">
-      {Object.entries(hidden).map(([name, value]) => (
-        <input key={name} type="hidden" name={name} value={value} />
-      ))}
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      aria-busy={pending}
+      className="grid gap-8 lg:grid-cols-[1.5fr_1fr] lg:items-start"
+    >
+      <div className="rounded-3xl border border-white/70 bg-white/60 p-5 shadow-[0_8px_30px_-12px_rgba(90,55,20,0.25)] sm:p-7">
+        <div
+          ref={summaryRef}
+          tabIndex={-1}
+          role={hasSummary ? "alert" : undefined}
+          className={cn(
+            "outline-none",
+            hasSummary && "border-destructive/40 bg-destructive/5 mb-6 rounded-2xl border p-4 text-sm"
+          )}
+        >
+          {hasSummary && (
+            <>
+              <h3 className="text-destructive font-semibold">There is a problem</h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {fieldErrors.map(({ key, message }) => (
+                  <li key={key}>
+                    <a href={`#checkout-${key}`} className="text-destructive underline underline-offset-2">
+                      {message}
+                    </a>
+                  </li>
+                ))}
+                {selectionError && <li>{selectionError}</li>}
+              </ul>
+            </>
+          )}
+        </div>
 
-      <FormField
-        label="Full name"
-        name="name"
-        errors={state.errors.name}
-        autoComplete="name"
-        required
-      />
-      <FormField
-        label="Email"
-        name="email"
-        type="email"
-        errors={state.errors.email}
-        autoComplete="email"
-        required
-      />
-      <FormField
-        label="Phone"
-        name="phone"
-        type="tel"
-        errors={state.errors.phone}
-        autoComplete="tel"
-        required
-      />
+        <h2 className="font-display text-xl font-semibold tracking-tight text-cocoa">Your details</h2>
+        <div className="mt-5 space-y-5">
+          {fields.map(({ key, label, type, auto, inputMode }) => {
+            const error = errorFor(key);
+            return (
+              <div key={key}>
+                <Label htmlFor={`checkout-${key}`} className="text-cocoa">
+                  {label}
+                  <span className="text-cocoa-muted font-normal">(required)</span>
+                </Label>
+                <Input
+                  id={`checkout-${key}`}
+                  type={type}
+                  inputMode={inputMode}
+                  value={values[key]}
+                  onChange={set(key)}
+                  onBlur={() => touch(key)}
+                  autoComplete={auto}
+                  aria-invalid={!!error || undefined}
+                  aria-describedby={error ? `checkout-${key}-error` : undefined}
+                  className={fieldClass}
+                  required
+                />
+                {error && (
+                  <p id={`checkout-${key}-error`} className="text-destructive mt-1.5 text-sm">
+                    {error}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
-      {state.message && (
-        <p aria-live="polite" className="text-destructive text-sm">
-          {state.message}
-        </p>
-      )}
+      <aside className="space-y-4 lg:sticky lg:top-6">
+        <div className="border-gold/50 from-cream-2 rounded-3xl border-2 bg-gradient-to-br to-white/70 p-5 text-cocoa shadow-[0_8px_30px_-12px_rgba(90,55,20,0.25)] sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Order summary</h2>
+            <Link
+              href={backHref}
+              className="text-brand-ink focus-visible:ring-ring inline-flex min-h-11 items-center rounded-full px-1 text-sm font-medium outline-none hover:underline focus-visible:ring-2"
+            >
+              Change
+            </Link>
+          </div>
+          <div className="mt-3">{summary}</div>
+          <p className="text-cocoa-muted mt-3 text-xs">Pay on arrival — no payment is taken online.</p>
+        </div>
 
-      <Button
-        type="submit"
-        size="lg"
-        disabled={pending || disabled}
-        className="w-full"
-      >
-        {pending ? "Processing…" : `Reserve — pay ${formatVnd(total)} on arrival`}
-      </Button>
-
-      <p className="text-muted-foreground text-xs">
-        This is a demo checkout — no real payment is charged.
-      </p>
+        <Button
+          type="submit"
+          disabled={pending || disabled}
+          className="bg-gold hover:bg-gold h-12 w-full cursor-pointer rounded-full text-base font-medium text-cocoa shadow-sm transition-[filter] duration-200 hover:brightness-95"
+        >
+          {pending ? (
+            "Processing…"
+          ) : (
+            <>
+              Reserve — pay {formatVnd(total)} on arrival
+              <ArrowRight aria-hidden className="size-5" />
+            </>
+          )}
+        </Button>
+      </aside>
     </form>
   );
 }

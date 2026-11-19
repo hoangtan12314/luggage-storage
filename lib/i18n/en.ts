@@ -8,8 +8,10 @@ export const en: HomeCopy = {
       "Secure luggage storage near Ben Thanh Market and Bui Vien Walking Street, District 1, Ho Chi Minh City. Book by the hour, day, or week from 10,000 ₫.",
   },
   hero: {
-    h1: "Luggage Storage in District 1, Ho Chi Minh City",
-    subhead: "Drop your bags. Explore hands-free.",
+    eyebrow: "Luggage storage",
+    h1: "Explore Saigon Hands-Free",
+    subhead: "Secure luggage storage near Ben Thanh Market.",
+    trust: ["Safe & Secure", "All Day", "Prime Location"],
     tagline:
       "Secure luggage storage near Ben Thanh Market and Bui Vien Walking Street — book by the hour, day, or week and pay only for the time you use.",
   },

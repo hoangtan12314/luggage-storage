@@ -16,7 +16,7 @@ const en: LandingCopy = {
     closeMenu: "Close menu",
   },
   hero: {
-    eyebrow: "NGÕ SAIGON",
+    eyebrow: "Ngõ Saigon",
     h1: "Experience Saigon Your Way",
     h1Mobile: "Ngõ Saigon",
     tagline: "Stay · Store · Experience",
@@ -27,7 +27,20 @@ const en: LandingCopy = {
     learnMore: "Learn more",
     exploreCta: "Explore our services",
     imageAlt:
-      "A smiling guest holding a bánh mì she just made in a Ngõ Saigon cooking class",
+      "Two smiling guests in Ngõ Saigon aprons holding Vietnamese coffee filters in a cooking class",
+  },
+  footer: {
+    since: "Since {year}",
+    rights: "All rights reserved.",
+    campuses: "Our campuses",
+    follow: "Follow us",
+    opensNewTab: "opens in a new tab",
+  },
+  campuses: {
+    notes: {
+      "campus-1": "Cooking classes",
+      "campus-2": "Rooms & luggage storage",
+    },
   },
   services: {
     cooking: {
@@ -67,7 +80,7 @@ const vi: LandingCopy = {
     closeMenu: "Đóng menu",
   },
   hero: {
-    eyebrow: "NGÕ SAIGON",
+    eyebrow: "Ngõ Saigon",
     h1: "Trải Nghiệm Sài Gòn Theo Cách Của Bạn",
     h1Mobile: "Ngõ Saigon",
     tagline: "Ở · Gửi · Trải nghiệm",
@@ -78,7 +91,20 @@ const vi: LandingCopy = {
     learnMore: "Tìm hiểu thêm",
     exploreCta: "Khám phá dịch vụ",
     imageAlt:
-      "Một vị khách đang mỉm cười cầm chiếc bánh mì vừa làm trong lớp nấu ăn tại Ngõ Saigon",
+      "Hai vị khách mỉm cười, mặc tạp dề Ngõ Saigon, cầm phin cà phê Việt trong lớp nấu ăn",
+  },
+  footer: {
+    since: "Từ năm {year}",
+    rights: "Bảo lưu mọi quyền.",
+    campuses: "Các cơ sở",
+    follow: "Theo dõi chúng tôi",
+    opensNewTab: "mở trong tab mới",
+  },
+  campuses: {
+    notes: {
+      "campus-1": "Lớp nấu ăn",
+      "campus-2": "Phòng nghỉ & gửi hành lý",
+    },
   },
   services: {
     cooking: {

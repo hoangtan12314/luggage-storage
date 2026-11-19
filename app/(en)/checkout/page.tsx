@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { CheckoutForm } from "@/components/checkout-form";
 import { OrderSummary } from "@/components/order-summary";
-import { Card } from "@/components/ui/card";
 import { getSizeConfig, ROOM } from "@/lib/config";
 import { countAvailable, countRoomsAvailable } from "@/lib/data/bookings";
 import { InvalidRangeError, quote, quoteRoom } from "@/lib/pricing";
@@ -20,13 +20,20 @@ export const metadata: Metadata = noIndexMetadata;
 
 function Recovery({ message }: { message: string }) {
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-lg px-6 py-16 text-center">
-        <h1 className="text-2xl font-semibold">That booking link isn&apos;t valid</h1>
-        <p className="text-muted-foreground mt-2">{message}</p>
-        <Link href="/" className="text-brand-ink mt-6 inline-block hover:underline">
-          ← Back to home
-        </Link>
+    <main className="from-cream to-cream-2 flex-1 bg-gradient-to-b">
+      <div className="mx-auto max-w-[1200px] px-4 pt-10 pb-20 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-xl rounded-3xl border border-white/70 bg-white/60 p-8 text-center shadow-[0_8px_30px_-12px_rgba(90,55,20,0.25)]">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-cocoa">
+            That booking link isn&apos;t valid
+          </h1>
+          <p className="text-cocoa-muted mt-3">{message}</p>
+          <Link
+            href="/"
+            className="bg-gold focus-visible:ring-ring mt-6 inline-flex min-h-12 items-center rounded-full px-6 text-[15px] font-medium text-cocoa shadow-sm transition-[filter] duration-200 outline-none hover:brightness-95 focus-visible:ring-2"
+          >
+            Back to home
+          </Link>
+        </div>
       </div>
     </main>
   );
@@ -127,39 +134,43 @@ export default async function CheckoutPage(props: PageProps<"/checkout">) {
   }
 
   return (
-    <main className="flex-1">
-      <div className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-2xl font-semibold">Checkout</h1>
-        <p className="text-muted-foreground mt-1 text-sm">
+    <main className="from-cream to-cream-2 flex-1 bg-gradient-to-b">
+      <div className="mx-auto max-w-[1200px] px-4 pt-6 pb-16 sm:px-6 lg:px-10 lg:pt-10 lg:pb-20">
+        <Link
+          href={backHref}
+          className="text-cocoa-muted hover:text-cocoa inline-flex min-h-11 items-center gap-1.5 text-sm underline-offset-4 hover:underline"
+        >
+          <ArrowLeft aria-hidden className="size-4" />
+          Back
+        </Link>
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-cocoa lg:text-4xl">
+          Checkout
+        </h1>
+        <p className="text-cocoa-muted mt-2 mb-8 text-lg">
           Guest checkout — no account needed. Pay when you arrive.
         </p>
 
-        <div className="mt-8 grid gap-6 sm:grid-cols-5">
-          <Card className="h-fit p-6 sm:col-span-2">
-            <h2 className="mb-4 font-semibold">Order summary</h2>
-            <OrderSummary quote={priced} />
-            {shortages.length > 0 && (
-              <div className="text-destructive mt-4 space-y-1 text-sm">
-                {shortages.map((s) => (
-                  <p key={s}>{s}</p>
-                ))}
-                <Link href={backHref} className="mt-1 inline-block underline">
-                  Change your selection
-                </Link>
-              </div>
-            )}
-          </Card>
-
-          <div className="sm:col-span-3">
-            <Card className="p-6">
-              <CheckoutForm
-                hidden={hidden}
-                total={priced.total}
-                disabled={shortages.length > 0}
-              />
-            </Card>
-          </div>
-        </div>
+        <CheckoutForm
+          hidden={hidden}
+          total={priced.total}
+          disabled={shortages.length > 0}
+          backHref={backHref}
+          summary={
+            <>
+              <OrderSummary quote={priced} />
+              {shortages.length > 0 && (
+                <div role="alert" className="text-destructive mt-4 space-y-1 text-sm">
+                  {shortages.map((s) => (
+                    <p key={s}>{s}</p>
+                  ))}
+                  <Link href={backHref} className="mt-1 inline-block underline">
+                    Change your selection
+                  </Link>
+                </div>
+              )}
+            </>
+          }
+        />
       </div>
     </main>
   );

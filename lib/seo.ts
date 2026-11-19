@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
-import { CLASS_TYPES, getClassType, LOCATION, ROOM, SITE_URL, SIZES } from "./config";
+import {
+  CLASS_TYPES,
+  getClassType,
+  getMeetingAddress,
+  LOCATION,
+  ROOM,
+  SITE_URL,
+  SIZES,
+  VIETNAMESE_ENABLED,
+} from "./config";
 import { classesCopy, copy, landingCopy, roomsCopy } from "./i18n";
 import { mapsLinkUrl } from "./maps";
 import { localizeWorkshop } from "./i18n/class-content";
@@ -42,11 +51,11 @@ function buildPageMetadata(
     description: meta.description,
     alternates: {
       canonical: path,
-      languages: {
-        en: pathEn,
-        vi: pathVi,
-        "x-default": pathEn,
-      },
+      // Only one language is live while Vietnamese is switched off, so there
+      // is nothing to cross-reference (VIETNAMESE_ENABLED in lib/config.ts).
+      ...(VIETNAMESE_ENABLED
+        ? { languages: { en: pathEn, vi: pathVi, "x-default": pathEn } }
+        : {}),
     },
     openGraph: {
       title: meta.title,
@@ -293,7 +302,7 @@ export function buildClassTypeJsonLd(locale: Locale, slug: string) {
     name: type.title,
     description: text.description,
     url,
-    provider: classProvider(type.content.meetingPoint.address),
+    provider: classProvider(getMeetingAddress(type.content.meetingPoint, locale)),
     areaServed: ["District 1", "Ho Chi Minh City"],
     offers: type.options.map((o) => ({
       "@type": "Offer",

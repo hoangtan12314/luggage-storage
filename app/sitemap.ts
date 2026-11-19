@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { CLASS_TYPES, SITE_URL } from "@/lib/config";
+import { CLASS_TYPES, SITE_URL, VIETNAMESE_ENABLED } from "@/lib/config";
 
 /**
  * One entry per page per language, each with its own hreflang alternates
@@ -22,20 +22,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
   return pages.flatMap(({ en, vi }) => {
+    const priority = en === "/" ? 1 : 0.8;
+
+    // Vietnamese is temporarily switched off (VIETNAMESE_ENABLED in
+    // lib/config.ts): /vi redirects to English, so list English pages only.
+    if (!VIETNAMESE_ENABLED) {
+      return [
+        {
+          url: `${SITE_URL}${en}`,
+          lastModified: now,
+          changeFrequency: "weekly" as const,
+          priority,
+        },
+      ];
+    }
+
     const languages = { en: `${SITE_URL}${en}`, vi: `${SITE_URL}${vi}` };
     return [
       {
         url: `${SITE_URL}${en}`,
         lastModified: now,
         changeFrequency: "weekly" as const,
-        priority: en === "/" ? 1 : 0.8,
+        priority,
         alternates: { languages },
       },
       {
         url: `${SITE_URL}${vi}`,
         lastModified: now,
         changeFrequency: "weekly" as const,
-        priority: en === "/" ? 1 : 0.8,
+        priority,
         alternates: { languages },
       },
     ];

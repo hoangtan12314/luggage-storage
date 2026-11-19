@@ -1,5 +1,5 @@
 import { BedDouble, ChefHat, Luggage } from "lucide-react";
-import { FindUsMap } from "@/components/find-us-map";
+import { CampusesMap } from "@/components/campuses-map";
 import { LandingHero } from "@/components/landing-hero";
 import { ServiceCard } from "@/components/service-card";
 import { copy, landingCopy } from "@/lib/i18n";
@@ -61,7 +61,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
 
       <div className="bg-cream-2 border-t border-cocoa/10">
         <div className="mx-auto max-w-5xl px-6 py-16">
-          <FindUsMap copy={findUs} />
+          <CampusesMap copy={findUs} notes={c.campuses.notes} locale={locale} />
         </div>
       </div>
     </main>

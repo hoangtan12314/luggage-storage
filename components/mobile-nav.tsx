@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog } from "radix-ui";
 import { Check, Menu, Phone, X } from "lucide-react";
+import { VIETNAMESE_ENABLED } from "@/lib/config";
 import { localizedPath } from "@/lib/i18n-routes";
 import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -94,25 +95,27 @@ export function MobileNav({
               <Phone className="size-4" />
               {phone}
             </a>
-            <div className="flex items-center gap-4">
-              {LOCALES.map((target) => (
-                <Dialog.Close asChild key={target}>
-                  <Link
-                    href={localizedPath(pathname, target)}
-                    hrefLang={target}
-                    lang={target}
-                    aria-current={target === locale ? "true" : undefined}
-                    className={cn(
-                      "flex items-center gap-1",
-                      target === locale ? "font-semibold" : "text-cocoa-muted"
-                    )}
-                  >
-                    {target === locale && <Check className="size-3.5" />}
-                    {LANGUAGE_LABEL[target]}
-                  </Link>
-                </Dialog.Close>
-              ))}
-            </div>
+            {VIETNAMESE_ENABLED && (
+              <div className="flex items-center gap-4">
+                {LOCALES.map((target) => (
+                  <Dialog.Close asChild key={target}>
+                    <Link
+                      href={localizedPath(pathname, target)}
+                      hrefLang={target}
+                      lang={target}
+                      aria-current={target === locale ? "true" : undefined}
+                      className={cn(
+                        "flex items-center gap-1",
+                        target === locale ? "font-semibold" : "text-cocoa-muted"
+                      )}
+                    >
+                      {target === locale && <Check className="size-3.5" />}
+                      {LANGUAGE_LABEL[target]}
+                    </Link>
+                  </Dialog.Close>
+                ))}
+              </div>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>

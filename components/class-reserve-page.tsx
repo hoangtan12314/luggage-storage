@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ClassReserveForm } from "@/components/class-reserve-form";
-import { getWorkshop } from "@/lib/config";
+import { getCampus, getMeetingAddress, getWorkshop } from "@/lib/config";
+import { formatHours } from "@/lib/class-format";
 import { countSeatsAvailable } from "@/lib/data/bookings";
 import { classesCopy } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
@@ -95,9 +96,11 @@ export async function ClassReservePage({
         summary={{
           className: workshop.name,
           dateLabel,
+          durationLabel: formatHours(workshop.durationHours, c.detail, locale),
           pricePerPerson: workshop.pricePerPerson,
           total: priced.total,
-          meetingAddress: workshop.meetingPoint.address,
+          meetingAddress: getMeetingAddress(workshop.meetingPoint, locale),
+          meetingLabel: getCampus(workshop.meetingPoint.campus)?.name,
           meetingDetails: workshop.meetingPoint.details,
           changeHref,
         }}

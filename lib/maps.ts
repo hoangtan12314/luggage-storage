@@ -5,7 +5,9 @@ import { LOCATION, MAP } from "./config";
  * otherwise the address for Google to geocode. Single source for both the
  * iframe and the outbound link so they can never disagree.
  */
-function mapQuery(): string {
+function mapQuery(address?: string): string {
+  // An explicit address (another campus) always wins over the homestay's.
+  if (address) return address;
   if (MAP.coords) {
     return `${MAP.coords.lat},${MAP.coords.lng}`;
   }
@@ -29,8 +31,8 @@ function mapQuery(): string {
  * project, an API key and a billing account for one static map. If this form
  * ever breaks, switching is a change to this function alone.
  */
-export function mapsEmbedUrl(): string {
-  const query = encodeURIComponent(mapQuery()).replace(/%20/g, "+");
+export function mapsEmbedUrl(address?: string): string {
+  const query = encodeURIComponent(mapQuery(address)).replace(/%20/g, "+");
   return `https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s${query}!6i17`;
 }
 
@@ -38,8 +40,8 @@ export function mapsEmbedUrl(): string {
  * "Open in Google Maps" target. On phones this hands off to the Maps app for
  * turn-by-turn directions, which is what someone standing on De Tham wants.
  */
-export function mapsLinkUrl(): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery())}`;
+export function mapsLinkUrl(address?: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery(address))}`;
 }
 
 /**

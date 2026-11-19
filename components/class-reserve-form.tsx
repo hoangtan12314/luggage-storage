@@ -32,9 +32,11 @@ type Props = {
   summary: {
     className: string;
     dateLabel: string;
+    durationLabel: string;
     pricePerPerson: number;
     total: number;
     meetingAddress: string;
+    meetingLabel?: string;
     meetingDetails?: string;
     changeHref: string;
   };
@@ -289,6 +291,7 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
           <dl className="mt-4 space-y-2.5 text-sm">
             <SummaryRow label={copy.summary.date} value={summary.dateLabel} />
             <SummaryRow label={copy.summary.time} value={selection.time} />
+            <SummaryRow label={copy.summary.duration} value={summary.durationLabel} />
             <SummaryRow
               label={copy.summary.guests}
               value={`${selection.people} × ${formatVnd(summary.pricePerPerson)}`}
@@ -310,6 +313,7 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
           </p>
           <MeetingPoint
             address={summary.meetingAddress}
+            label={summary.meetingLabel}
             details={summary.meetingDetails}
             openInMaps={openInMaps}
           />

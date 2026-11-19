@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { Minus, Plus, SearchX, TriangleAlert } from "lucide-react";
+import { Clock, Minus, Plus, SearchX, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,8 @@ export type AvailabilityOption = {
   name: string;
   pricePerPerson: number;
   availableTimes: string[];
+  /** How long the class lasts, already formatted ("1 hour"). */
+  durationLabel: string;
 };
 
 type Props = {
@@ -290,9 +292,15 @@ export function AvailabilityCard({
                   >
                     <legend className="sr-only">{option.name}</legend>
                     <div className="flex items-start justify-between gap-3">
-                      <p className="font-display font-semibold tracking-tight text-cocoa">
-                        {option.name}
-                      </p>
+                      <div>
+                        <p className="font-display font-semibold tracking-tight text-cocoa">
+                          {option.name}
+                        </p>
+                        <p className="text-cocoa-muted mt-1 flex items-center gap-1.5 text-xs">
+                          <Clock aria-hidden className="size-3.5" />
+                          {option.durationLabel}
+                        </p>
+                      </div>
                       <p className="text-brand-ink shrink-0 text-sm font-semibold tabular-nums">
                         {formatVnd(option.pricePerPerson)}
                         <span className="text-cocoa-muted block text-right text-xs font-normal">

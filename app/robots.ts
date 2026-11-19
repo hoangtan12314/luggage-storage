@@ -1,11 +1,17 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/config";
+import { SITE_URL, VIETNAMESE_ENABLED } from "@/lib/config";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/luggage", "/rooms", "/classes", "/vi", "/vi/luggage", "/vi/rooms", "/vi/classes"],
+      allow: [
+        "/",
+        "/luggage",
+        "/rooms",
+        "/classes",
+        ...(VIETNAMESE_ENABLED ? ["/vi", "/vi/luggage", "/vi/rooms", "/vi/classes"] : []),
+      ],
       // Checkout and booking confirmation carry guest personal details and
       // must never be crawled — see the noindex meta on those pages too.
       disallow: ["/checkout", "/booking/", "/classes/reserve", "/vi/classes/reserve"],

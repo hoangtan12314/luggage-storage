@@ -5,7 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import { MeetingPoint } from "@/components/meeting-point";
 import { OrderSummary } from "@/components/order-summary";
 import { Card } from "@/components/ui/card";
-import { getWorkshop, LOCATION } from "@/lib/config";
+import { getCampus, getMeetingAddress, getWorkshop, LOCATION } from "@/lib/config";
 import { findByRef } from "@/lib/data/bookings";
 import { quote, quoteClass, quoteRoom } from "@/lib/pricing";
 import { noIndexMetadata } from "@/lib/seo";
@@ -91,7 +91,8 @@ export default async function BookingConfirmationPage(
               <div className="mt-4">
                 <h2 className="mb-2 font-semibold">Meeting point</h2>
                 <MeetingPoint
-                  address={meetingPoint.address}
+                  address={getMeetingAddress(meetingPoint, "en")}
+                  label={getCampus(meetingPoint.campus)?.name}
                   details={meetingPoint.details}
                   openInMaps="Open in Google Maps"
                 />

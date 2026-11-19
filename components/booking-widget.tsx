@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { Info, Minus, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Info, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -32,6 +31,17 @@ function defaultRange() {
   return { start: toLocalInputValue(start), end: toLocalInputValue(end) };
 }
 
+// "Now" only exists in the browser. The page is cached on the server, so the
+// default drop-off/pick-up must be read on the client (empty on the server)
+// or the HTML and the hydrated inputs disagree. The snapshot is a string, so
+// it is stable between renders.
+const subscribeNever = () => () => {};
+const getDefaultRangeKey = () => {
+  const r = defaultRange();
+  return `${r.start}|${r.end}`;
+};
+const getServerRangeKey = () => "|";
+
 function formatDayLabel(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, {
     month: "short",
@@ -46,9 +56,16 @@ type BookingWidgetProps = {
 
 export function BookingWidget({ availability }: BookingWidgetProps) {
   const router = useRouter();
-  const initial = useMemo(() => defaultRange(), []);
-  const [start, setStart] = useState(initial.start);
-  const [end, setEnd] = useState(initial.end);
+  const [initialStart, initialEnd] = useSyncExternalStore(
+    subscribeNever,
+    getDefaultRangeKey,
+    getServerRangeKey
+  ).split("|");
+  // null = the guest hasn't touched it, so follow the default.
+  const [startEdit, setStart] = useState<string | null>(null);
+  const [endEdit, setEnd] = useState<string | null>(null);
+  const start = startEdit ?? initialStart;
+  const end = endEdit ?? initialEnd;
   const [quantities, setQuantities] = useState<Record<LockerSize, number>>({
     small: 0,
     large: 1,
@@ -65,7 +82,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
   );
 
   const preview = useMemo(() => {
-    if (items.length === 0) return null;
+    if (items.length === 0 || !start || !end) return null;
     const startIso = new Date(start).toISOString();
     const endIso = new Date(end).toISOString();
     try {
@@ -125,10 +142,10 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
     <TooltipProvider>
       <form
         onSubmit={handleSubmit}
-        className="bg-card rounded-2xl border p-5 shadow-sm sm:p-6"
+        className="rounded-3xl border border-white/70 bg-white/80 p-5 text-cocoa shadow-[0_12px_40px_-14px_rgba(90,55,20,0.3)] backdrop-blur-sm sm:p-6"
       >
         {/* Rate strip — informational: the best rate is applied automatically. */}
-        <div className="bg-muted/50 grid grid-cols-3 gap-1 rounded-xl border p-1 text-center">
+        <div className="grid grid-cols-3 gap-1 rounded-2xl border border-cocoa/10 bg-cocoa/5 p-1 text-center">
           {(
             [
               ["Hourly", "hourly"],
@@ -139,23 +156,23 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
             <div
               key={key}
               className={cn(
-                "rounded-lg px-2 py-2",
-                key === "weekly" && "bg-brand-muted"
+                "rounded-xl px-2 py-2.5",
+                key === "weekly" && "border border-gold/60 bg-gold/20"
               )}
             >
-              <p className="text-xs font-semibold">
+              <p className="text-sm font-semibold">
                 {label}
                 {key === "weekly" && (
                   <span className="text-brand-ink ml-1 font-medium">· best value</span>
                 )}
               </p>
-              <p className="text-muted-foreground mt-0.5 text-[11px]">
+              <p className="text-cocoa-muted mt-0.5 text-xs">
                 from {formatVnd(SIZES[0][key])}
               </p>
             </div>
           ))}
         </div>
-        <p className="text-muted-foreground mt-2 text-center text-xs">
+        <p className="text-cocoa-muted mt-2 text-center text-xs">
           We bill the cheapest combination automatically — no plan to choose.
         </p>
 
@@ -170,10 +187,10 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
               <div
                 key={size.id}
                 className={cn(
-                  "relative rounded-xl border-2 transition-colors",
+                  "relative rounded-2xl border-2 transition-colors",
                   qty > 0
-                    ? "border-brand bg-brand-muted"
-                    : "border-border bg-background hover:border-brand/50",
+                    ? "border-gold bg-gold/15"
+                    : "border-cocoa/15 bg-white/70 hover:border-gold/60",
                   soldOut && "opacity-60"
                 )}
               >
@@ -185,7 +202,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                     <button
                       type="button"
                       aria-label={`What fits in a ${size.label} locker`}
-                      className="text-muted-foreground hover:text-foreground absolute top-4 right-4 z-10"
+                      className="text-cocoa-muted hover:text-cocoa focus-visible:ring-ring absolute top-1 right-1 z-10 flex size-10 items-center justify-center rounded-full focus-visible:ring-2 focus-visible:outline-none"
                     >
                       <Info className="size-4" />
                     </button>
@@ -200,19 +217,21 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                   onClick={() => toggle(size.id)}
                   disabled={soldOut}
                   aria-pressed={qty > 0}
-                  className="focus-visible:ring-ring w-full rounded-xl p-4 pr-10 text-left focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed"
+                  className="focus-visible:ring-ring w-full rounded-2xl p-4 pr-10 text-left focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed"
                 >
-                  <Badge
-                    variant={qty > 0 ? "default" : "secondary"}
-                    className="uppercase"
+                  <span
+                    className={cn(
+                      "inline-block rounded-md px-2.5 py-0.5 text-xs font-semibold tracking-wide uppercase",
+                      qty > 0 ? "bg-gold text-cocoa" : "bg-cocoa/10 text-cocoa"
+                    )}
                   >
                     {size.label}
-                  </Badge>
+                  </span>
 
-                  <p className="mt-2 text-sm font-medium">{size.description}</p>
-                  <p className="mt-1 text-lg font-semibold">
+                  <p className="mt-2.5 text-sm text-cocoa">{size.description}</p>
+                  <p className="mt-1 text-lg font-semibold tabular-nums">
                     {formatVnd(size.daily)}
-                    <span className="text-muted-foreground text-xs font-normal">
+                    <span className="text-cocoa-muted text-xs font-normal">
                       {" "}
                       / day
                     </span>
@@ -230,6 +249,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="size-11 cursor-pointer rounded-full border-cocoa/20 bg-white/80"
                         onClick={() => adjust(size.id, -1)}
                         disabled={qty === 0}
                         aria-label={`Remove one ${size.label} locker`}
@@ -246,6 +266,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="size-11 cursor-pointer rounded-full border-cocoa/20 bg-white/80"
                         onClick={() => adjust(size.id, 1)}
                         disabled={available !== undefined && qty >= available}
                         aria-label={`Add one ${size.label} locker`}
@@ -253,7 +274,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                         <Plus className="size-4" />
                       </Button>
                       {available !== undefined && available <= 3 && (
-                        <span className="text-muted-foreground text-xs">
+                        <span className="text-cocoa-muted text-xs">
                           {available} left
                         </span>
                       )}
@@ -270,7 +291,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
           <div>
             <label
               htmlFor="start"
-              className="text-muted-foreground text-xs font-medium tracking-wide uppercase"
+              className="text-cocoa text-xs font-medium tracking-[0.12em] uppercase"
             >
               Drop off
             </label>
@@ -282,14 +303,14 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                 setStart(e.target.value);
                 setError(null);
               }}
-              className="border-input bg-background focus-visible:ring-ring mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
+              className="focus-visible:ring-ring mt-1.5 block h-11 w-full rounded-xl border border-cocoa/20 bg-white/80 px-3 text-sm text-cocoa focus-visible:ring-2 focus-visible:outline-none"
               required
             />
           </div>
           <div>
             <label
               htmlFor="end"
-              className="text-muted-foreground text-xs font-medium tracking-wide uppercase"
+              className="text-cocoa text-xs font-medium tracking-[0.12em] uppercase"
             >
               Pick up
             </label>
@@ -302,7 +323,7 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
                 setEnd(e.target.value);
                 setError(null);
               }}
-              className="border-input bg-background focus-visible:ring-ring mt-1 block w-full rounded-lg border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
+              className="focus-visible:ring-ring mt-1.5 block h-11 w-full rounded-xl border border-cocoa/20 bg-white/80 px-3 text-sm text-cocoa focus-visible:ring-2 focus-visible:outline-none"
               required
             />
           </div>
@@ -310,11 +331,11 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
 
         {/* Live summary */}
         {preview && (
-          <div className="border-brand bg-brand-muted mt-5 rounded-xl border-2 p-4">
+          <div className="mt-5 rounded-2xl border border-gold/50 bg-gold/20 p-4">
             <div className="flex items-baseline justify-between">
               <div>
                 <p className="font-semibold">{preview.duration}</p>
-                <p className="text-muted-foreground text-xs">
+                <p className="text-cocoa-muted text-xs">
                   {formatDayLabel(preview.quote.start)} —{" "}
                   {formatDayLabel(preview.quote.end)}
                 </p>
@@ -324,16 +345,16 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
               </p>
             </div>
 
-            <div className="mt-3 space-y-2 border-t pt-3">
+            <div className="mt-3 space-y-2 border-t border-cocoa/10 pt-3">
               {preview.quote.items.map((item) => (
                 <div key={item.size} className="flex justify-between text-sm">
                   <span>
                     {SIZES.find((s) => s.id === item.size)?.label}
-                    <span className="text-muted-foreground"> × {item.quantity}</span>
+                    <span className="text-cocoa-muted"> × {item.quantity}</span>
                   </span>
                   <span className="text-right">
                     {formatVnd(item.subtotal)}
-                    <span className="text-muted-foreground block text-xs">
+                    <span className="text-cocoa-muted block text-xs">
                       {item.lines
                         .map(
                           (l) =>
@@ -350,8 +371,13 @@ export function BookingWidget({ availability }: BookingWidgetProps) {
 
         {error && <p className="text-destructive mt-3 text-sm">{error}</p>}
 
-        <Button type="submit" size="lg" className="mt-5 w-full">
+        <Button
+          type="submit"
+          size="lg"
+          className="bg-gold hover:bg-gold mt-5 h-12 w-full cursor-pointer rounded-full text-base font-medium text-cocoa shadow-sm transition-[filter] duration-200 hover:brightness-95"
+        >
           Continue To Your Details
+          <ArrowRight aria-hidden className="size-5" />
         </Button>
       </form>
     </TooltipProvider>

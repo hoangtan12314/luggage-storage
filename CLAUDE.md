@@ -195,64 +195,69 @@ Consequences when adding routes:
   whenever the server rejects it.
 - **`/classes/[type]` uses `dynamicParams = false`** so unknown slugs are a real
   404 (removing it returns a soft 200). Next logs a benign "NoFallbackError" for them.
-- Class pages show the class's **own `meetingPoint`** (Bùi Viện), never `LOCATION`
-  (the homestay on De Tham) and never `FindUsMap`.
-- `lib/class-actions.ts` (`getClassAvailability`) is a second `"use server"` file on
-  purpose — `lib/actions.ts` exports only `createBooking`.
-- **ESLint forbids `setState` inside effects** (react-hooks `set-state-in-effect`).
-  Derive values on render instead (see how `ClassBookingForm` derives the
-  effective date/time/people and keys fetched seats by class + date).
-- **Photos in `public/` are served raw, EXIF included.** Resize and strip
-  metadata before committing iPhone photos.
-- A local booking test **sends a real email** whenever `RESEND_API_KEY` is set in
-  `.env.local`. Unset it (or use a throwaway `NOTIFY_EMAIL`) before submitting
-  test bookings.
-
-## Data limitations to be aware of
-
-The in-memory store resets on every restart and is **not** correct across
-multiple serverless instances — this now applies to rooms as well as luggage.
-Swapping `lib/data/bookings.ts` for a real database (SQLite/Postgres) is the
-main prerequisite before this takes real bookings; the repository surface was
-kept narrow (`createBooking`, `findByRef`, `findOverlapping`/`countAvailable`
-for luggage, `findOverlappingRooms`/`countRoomsAvailable` for rooms) so this is
-a scoped change, not a rewrite. There is no admin UI yet for editing prices or
-seeing a day's bookings — both rate tables live in `lib/config.ts` as plain
-constants (`SIZES`, `ROOM`), and a family member wanting to see today's
-arrivals currently has no page for that. This was deliberately deferred; see
-the plan file history for the fuller design (Postgres schema, staff login, a
-day-view) if picking it up later.
-
-## Environment
-
-`.env.local` (gitignored; see `.env.local.example`):
-
-- `RESEND_API_KEY` — unset falls back to logging notifications to the console.
-- `NOTIFY_EMAIL` — where booking notifications go. Resend's shared
-  `onboarding@resend.dev` sender can only reach the Resend account's own signup
-  address unless a custom domain is verified.
-- `NEXT_PUBLIC_SITE_URL` — drives canonical URLs, sitemap, robots and JSON-LD via
-  `SITE_URL` in `lib/config.ts`. Falls back to `https://example.com`.
-
-## Placeholders awaiting real values
-
-Marked `TODO` in `lib/config.ts` unless noted — do not invent values for these:
-
-- Locker inventory counts (currently 20 small / 10 large).
-- **Everything in `ROOM`** (`lib/config.ts`) — nightly rate (450,000 ₫),
-  capacity, amenities, check-in/out times. All sample data pending a real
-  decision from the owner; `RoomsCopy.rateNote` in both languages already says
-  so on the page itself. Don't treat `ROOM.nightly` as a real price.
+- **Vietnamese is temporarily OFF** (`VIETNAMESE_ENABLED = false` in
+  `lib/config.ts`). The language switcher is hidden everywhere (header, mobile menu,
+  footer), `/vi` and `/vi/*` redirect (307) to the English page via `next.config.ts`,
+  and `/vi` is left out of the sitemap, robots allow-list and hreflang. All the
+  Vietnamese pages and copy are still in the repo — set the flag to `true` to bring
+  them back (and the redirects stop automatically).
+- **Two campuses** (`CAMPUSES` in `lib/config.ts`): **Campus 1** = 104/23 Bùi Viện
+  (where the classes meet), **Campus 2** = 199/14 Đề Thám (the existing homestay,
+  i.e. `LOCATION`: rooms and luggage). **Addresses are per language and never
+  abbreviated** (`campus.address.en` / `.vi`; `LOCATION.address` is the English
+  Campus 2 one); a class's `meetingPoint` is just `{ campus }` and its address comes
+  from the campus via `getMeetingAddress(mp, locale)`. TODO: confirm the ward names
+  (Phạm Ngũ Lão for Campus 1, Bến Thành for Campus 2 — taken from the owner's data).
+  Both campuses share `LOCATION`'s phone and hours until per-campus values exist.
+  Class pages label the meeting point with its campus; the owner email for a class
+  ends with its campus address. The landing page's "Find us" (`CampusesMap`) and
+  the footer list both campuses; the luggage and rooms pages still use the
+  single-location `FindUsMap` (Campus 2). Maps queries use the Vietnamese address
+  (Google finds it most reliably) whatever the page language.
+- **Footer** (`site-footer.tsx`) uses the cream/cocoa/gold style like the header:
+  logo + "Since 2021", campus cards, social pills, and the © line.
 - **Workshops** (`WORKSHOPS` in `lib/config.ts`): the owner's real data (names,
-  prices, times, highlights, description, includes, meeting point). Still to
-  confirm: `CLASS_FACTS` (duration 1.5–2.5 h, free cancellation 24 h, languages)
-  was copied from the owner's GetYourGuide *spring-roll* listing and applied to
-  every class; the Vietnamese class text in `lib/i18n/class-content.ts` is a
-  draft translation awaiting the owner's review; the last cocoa "includes" line
-  was truncated in the supplied text and completed as "Vegan options available
-  upon request". Cocoa and spring-roll have no photo (icon panel) — don't reuse
-  the coffee photo for them. Free cancellation is a policy statement only (no
-  cancel feature). Reviews/ratings from GetYourGuide are not republished.
+  prices, times, **durations** — 1 h for the standard coffee/cocoa classes, 3 h
+  for the "4 Types" ones, 2.5 h for spring roll — highlights, description,
+  includes, meeting point). A class page shows one duration, or a range ("1–3
+  hours") when its options differ; each option card shows its own. Heads-up: the
+  3-hour classes' start times (every 2 h) overlap, but seats are only pooled per
+  type + date + time, not across overlapping sessions. Still to confirm:
+  `CLASS_FACTS` (free cancellation 24 h) and the instructor languages were copied
+  from the owner's GetYourGuide *spring-roll* listing and applied to every class;
+  the Vietnamese class text in `lib/i18n/class-content.ts` is a draft translation
+  awaiting the owner's review; the last cocoa "includes" line was truncated in the
+  supplied text and completed as "Vegan options available upon request". Cocoa
+  and spring-roll have no photo (icon panel) — don't reuse the coffee photo for
+  them. Free cancellation is a policy statement only (no cancel feature).
+  Reviews/ratings from GetYourGuide are not republished.
+- **Luggage page** (`/luggage`, `/vi/luggage`) uses the cream/cocoa/gold design from
+  `ui-sample/luggage-ui*.png`: `LuggageHero` (suitcase photo faded behind the headline,
+  booking card as the second column), `LuggageInfoBar` (address/hours/phone + click-to-load
+  map, replaces `FindUsMap` here), then intro/rates/FAQ (`Faq tone="cream"`). The header
+  floats over the hero on mobile (`isHome` includes the luggage paths). `BookingWidget`
+  reads the default drop-off/pick-up on the client (`useSyncExternalStore`) — the page is
+  cached, so computing "now" in render caused a hydration mismatch. The hero photo
+  `public/luggage-service.jpg` is only 678 px wide (a larger one would look sharper).
+  `/checkout` (luggage + rooms) now uses the same cream style: `CheckoutForm` is a two-column form+summary like the class reserve form (manual `startTransition` dispatch, error summary, client validation) and takes the server-rendered summary as a prop. `/rooms` and the `/booking/[ref]` confirmation still use the older white style.
+- **Class albums** (`lib/albums.ts`, `components/album-carousel.tsx`): a class's photo
+  album is just the folder `public/albums/<coffee|cocoa|spring-roll>/` — every image in
+  it, in filename order (`01-…`, `02-…`), optional `captions.json` (`{"01-x.jpg": "alt"}`)
+  for alt text. Size is read at build time (the class pages are static, so adding photos
+  means a redeploy; reading `public/` at runtime would not work on Vercel). With photos
+  the class detail page shows the carousel (Embla;
+  one photo at a time in a fixed frame, wide photos cover it, portrait ones sit whole over a blurred copy; a 4 s timer with our own
+  `setInterval`, paused on hover/keyboard focus/lightbox/hidden tab/reduced motion;
+  click opens `yet-another-react-lightbox`) instead of the single `image`; an empty
+  folder falls back to the old cover/icon panel. Run **`pnpm photos`** after adding files:
+  converts HEIC (macOS `sips`), applies rotation, resizes to ≤2000 px, strips EXIF/GPS,
+  recompresses — idempotent. The card posters on `/classes` are separate (`CLASS_POSTERS`
+  in `lib/config.ts`). Gotcha: in `next dev`, open the site via `localhost`, not
+  `127.0.0.1` — the latter is a blocked dev origin and the page never hydrates.
+- **Social links** (`SOCIAL_LINKS` in `lib/config.ts`): only links with a URL are
+  shown in the footer. Facebook, Instagram and Klook URLs are still empty (TODO);
+  GetYourGuide points at the spring-roll listing. `ESTABLISHED_YEAR` (2021) drives
+  the "Since 2021" badge and the © range, whose end year is read on the client.
 - Opening hours (currently the free text "All day"; JSON-LD has no
   `openingHoursSpecification` until this is confirmed).
 - Geo coordinates (a central District 1 placeholder, shared by both the
@@ -261,3 +266,10 @@ Marked `TODO` in `lib/config.ts` unless noted — do not invent values for these
   qualitative phrasing ("walking distance") rather than fabricated minutes.
 - No `aggregateRating` in either service's JSON-LD, and none should be added
   until real reviews exist — inventing them violates Google's guidelines.
+
+## Layout notes
+
+- The hero (`landing-hero.tsx`, `classes-page.tsx`) is capped at `max-w-[1500px]`
+  like the header and cards, so the photo stops growing on very wide screens;
+  from the `2xl` breakpoint `HeroPhoto` also rounds its left corners. (Use `2xl:`,
+  not `min-[1500px]:` — the arbitrary variant sorts before `lg:` and loses.)

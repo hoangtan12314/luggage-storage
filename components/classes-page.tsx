@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { ClassTypeCard } from "@/components/class-type-card";
 import { HeroPhoto } from "@/components/hero-photo";
 import { MeetingPoint } from "@/components/meeting-point";
-import { CLASS_TYPES } from "@/lib/config";
+import { CLASS_TYPES, getCampus, getMeetingAddress } from "@/lib/config";
 import { classesCopy } from "@/lib/i18n";
 import { localizeWorkshop } from "@/lib/i18n/class-content";
 import type { Locale } from "@/lib/i18n";
@@ -27,8 +27,8 @@ export function ClassesPage({ locale }: { locale: Locale }) {
       />
 
       <div className="from-cream to-cream-2 bg-gradient-to-b">
-        <section className="lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center">
-          <HeroPhoto src="/big-cover.jpg" alt={c.hero.imageAlt} />
+        <section className="mx-auto max-w-[1500px] lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center">
+          <HeroPhoto src="/big-cover-cooking-class.jpg" alt={c.hero.imageAlt} />
 
           <div className="relative -mt-12 px-6 pb-10 sm:px-10 lg:mt-0 lg:pl-12 lg:pr-8 lg:py-10">
             <p className="hidden items-center gap-5 text-sm font-medium tracking-[0.3em] text-cocoa lg:flex">
@@ -85,7 +85,8 @@ export function ClassesPage({ locale }: { locale: Locale }) {
           </h2>
           <MeetingPoint
             className="mt-4"
-            address={meeting.address}
+            address={getMeetingAddress(meeting, locale)}
+            label={getCampus(meeting.campus)?.name}
             details={meeting.details}
             openInMaps={c.detail.openInMaps}
           />

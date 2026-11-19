@@ -21,6 +21,9 @@ export function StickyBookBar({
   // Assume the card is visible until the observer says otherwise, so the bar
   // never flashes on first paint.
   const [cardVisible, setCardVisible] = useState(true);
+  // The bar also steps aside once the footer is on screen, so it never covers
+  // the footer's last lines (copyright, links) at the bottom of the page.
+  const [footerVisible, setFooterVisible] = useState(false);
 
   useEffect(() => {
     const target = document.getElementById(targetId);
@@ -30,6 +33,14 @@ export function StickyBookBar({
     return () => observer.disconnect();
   }, [targetId]);
 
+  useEffect(() => {
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+    const observer = new IntersectionObserver(([entry]) => setFooterVisible(entry.isIntersecting));
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+
   function goToCard() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     document
@@ -38,7 +49,7 @@ export function StickyBookBar({
     document.getElementById("avail-date")?.focus({ preventScroll: true });
   }
 
-  if (cardVisible) return null;
+  if (cardVisible || footerVisible) return null;
 
   return (
     <div className="border-cocoa/10 bg-cream-2/95 fixed inset-x-0 bottom-0 z-30 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_-12px_rgba(90,55,20,0.3)] backdrop-blur lg:hidden">

@@ -8,8 +8,10 @@ export const vi: HomeCopy = {
       "Dịch vụ gửi giữ hành lý an toàn gần Chợ Bến Thành và phố đi bộ Bùi Viện, Quận 1, TP.HCM. Đặt chỗ theo giờ, ngày hoặc tuần, chỉ từ 10.000 ₫.",
   },
   hero: {
-    h1: "Gửi Hành Lý Quận 1, TP.HCM",
-    subhead: "Gửi hành lý, thảnh thơi khám phá Sài Gòn.",
+    eyebrow: "Gửi hành lý",
+    h1: "Khám Phá Sài Gòn Thảnh Thơi",
+    subhead: "Gửi hành lý an toàn gần Chợ Bến Thành.",
+    trust: ["An toàn & bảo mật", "Cả ngày", "Vị trí đắc địa"],
     tagline:
       "Dịch vụ gửi giữ hành lý an toàn gần Chợ Bến Thành và phố đi bộ Bùi Viện — đặt chỗ theo giờ, ngày hoặc tuần, chỉ trả tiền cho thời gian bạn dùng.",
   },

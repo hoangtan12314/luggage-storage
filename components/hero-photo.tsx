@@ -6,11 +6,14 @@ import Image from "next/image";
  * Below lg the photo starts under the floating header (top-[4.5rem]) so the
  * logo tile and menu button never cover the face, and fades into the cream
  * page at both ends. From lg up it fills its grid column and its right edge
- * gets the large organic curve from the design.
+ * gets the large organic curve from the design. The hero section that holds it
+ * is capped at max-w-[1500px] (like the header and cards), so on very wide
+ * screens the photo stops growing; from the 2xl breakpoint (1536px) it also gets rounded left
+ * corners, since it no longer touches the screen edge.
  */
 export function HeroPhoto({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="relative h-[27rem] overflow-hidden sm:h-[30rem] lg:h-[30rem] lg:[border-radius:0_17%_31%_0/0_44%_56%_0]">
+    <div className="relative h-[27rem] overflow-hidden sm:h-[30rem] lg:h-[30rem] lg:[border-radius:0_17%_31%_0/0_44%_56%_0] 2xl:[border-radius:2rem_17%_31%_2rem/2rem_44%_56%_2rem]">
       <div className="absolute inset-x-0 top-[4.5rem] bottom-0 lg:inset-0">
         <Image
           src={src}
@@ -18,7 +21,7 @@ export function HeroPhoto({ src, alt }: { src: string; alt: string }) {
           fill
           priority
           sizes="(min-width: 1024px) 52vw, 100vw"
-          className="object-cover object-[35%_30%]"
+          className="object-cover object-[50%_35%]"
         />
         <div
           aria-hidden

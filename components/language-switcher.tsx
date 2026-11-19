@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VIETNAMESE_ENABLED } from "@/lib/config";
 import { localizedPath } from "@/lib/i18n-routes";
 import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,9 @@ const LOCALES: Locale[] = ["en", "vi"];
  */
 export function LanguageSwitcher({ locale }: { locale: Locale }) {
   const pathname = usePathname();
+
+  // Vietnamese is temporarily off (see VIETNAMESE_ENABLED in lib/config.ts).
+  if (!VIETNAMESE_ENABLED) return null;
 
   return (
     <DropdownMenu>

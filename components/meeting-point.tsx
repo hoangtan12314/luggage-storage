@@ -9,11 +9,14 @@ import { cn } from "@/lib/utils";
  */
 export function MeetingPoint({
   address,
+  label,
   details,
   openInMaps,
   className,
 }: {
   address: string;
+  /** Campus name ("Campus 1") shown above the address. */
+  label?: string;
   details?: string;
   openInMaps: string;
   className?: string;
@@ -28,6 +31,11 @@ export function MeetingPoint({
       <div className="flex items-start gap-3">
         <MapPin aria-hidden className="text-brand-ink mt-0.5 size-5 shrink-0" />
         <div>
+          {label && (
+            <span className="bg-gold/25 mb-1.5 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide text-cocoa uppercase">
+              {label}
+            </span>
+          )}
           <p className="font-medium text-cocoa">{address}</p>
           {details && <p className="text-cocoa-muted mt-1 text-sm">{details}</p>}
         </div>

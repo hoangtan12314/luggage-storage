@@ -33,7 +33,7 @@ export const en: HomeCopy = {
     },
     {
       title: "Check out as a guest",
-      body: "No account needed — just your name, email, and phone.",
+      body: "No account needed — just your name, email, and WhatsApp number.",
     },
     {
       title: "Get your reference code",

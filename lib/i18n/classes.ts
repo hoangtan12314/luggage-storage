@@ -86,9 +86,8 @@ const en: ClassesCopy = {
     required: "required",
     name: "Full name",
     email: "Email",
-    phone: "Phone",
     whatsapp: "WhatsApp",
-    contactHelp: "Enter a phone number or a WhatsApp number — at least one is required.",
+    contactHelp: "Pick your country code first. We’ll contact you on WhatsApp to confirm your class.",
     notes: "Allergies or dietary needs",
     notesHelp: "Optional. Tell us anything we should prepare for.",
     summary: {
@@ -112,8 +111,8 @@ const en: ClassesCopy = {
       summaryTitle: "Please fix these before reserving",
       name: "Enter your full name",
       email: "Enter a valid email address",
-      contact: "Enter a phone number or a WhatsApp number",
-      phone: "Enter a valid number",
+      contact: "Enter your WhatsApp number",
+      phone: "Enter a valid WhatsApp number",
       notes: "Please keep notes under 500 characters",
     },
     invalid: {
@@ -210,9 +209,8 @@ const vi: ClassesCopy = {
     required: "bắt buộc",
     name: "Họ và tên",
     email: "Email",
-    phone: "Số điện thoại",
     whatsapp: "WhatsApp",
-    contactHelp: "Nhập số điện thoại hoặc số WhatsApp — cần ít nhất một trong hai.",
+    contactHelp: "Chọn mã quốc gia trước. Chúng tôi sẽ liên hệ với bạn qua WhatsApp để xác nhận lớp học.",
     notes: "Dị ứng hoặc chế độ ăn",
     notesHelp: "Không bắt buộc. Cho chúng tôi biết điều cần chuẩn bị.",
     summary: {
@@ -236,8 +234,8 @@ const vi: ClassesCopy = {
       summaryTitle: "Vui lòng sửa các mục sau trước khi đặt chỗ",
       name: "Nhập họ và tên của bạn",
       email: "Nhập địa chỉ email hợp lệ",
-      contact: "Nhập số điện thoại hoặc số WhatsApp",
-      phone: "Nhập số hợp lệ",
+      contact: "Nhập số WhatsApp của bạn",
+      phone: "Nhập số WhatsApp hợp lệ",
       notes: "Ghi chú tối đa 500 ký tự",
     },
     invalid: {

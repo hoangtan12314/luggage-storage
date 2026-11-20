@@ -52,8 +52,9 @@ Core domain logic, all framework-free and unit-checkable:
   (`items=small:2,large:1`), `roomSelectionSchema` for rooms
   (`checkIn`/`checkOut`/`quantity`, "YYYY-MM-DD" dates), and for classes
   `classSelectionSchema` (workshop, date, time, people) plus
-  `classCustomerSchema` (phone **or** WhatsApp — at least one — plus email;
-  the group error is on the `contact` path).
+  `classCustomerSchema` — the customer shape for **all three kinds**: name, email and a
+  required WhatsApp number (the forms have no phone field; the form's error key is `contact`,
+  the server's is `whatsapp`).
 - `lib/class-dates.ts` — "tomorrow"/"+90 days" in the **shop's timezone**
   (`LOCATION.timezone`), pure and shared by the form and the server action.
 - `lib/money.ts` — `formatVnd()`. **All** prices render through it.
@@ -77,8 +78,8 @@ optional kind-specific fields (`items`, `roomQuantity`, or `workshopId`/`people`
 strict discriminated union — deliberately, so the shared plumbing (repository,
 notifications, confirmation page) stays one code path with a `kind` branch at
 the few points that actually differ. Narrow on `kind` before reading `items`, `roomQuantity` or
-the class fields. `CustomerDetails.phone` is optional because a class guest may
-give only WhatsApp (luggage/room schemas still require it). `Quote`/`RoomQuote` are similarly tagged (`AnyQuote`), and
+the class fields. `CustomerDetails.phone` is optional and legacy: new requests carry only
+`whatsapp`, but confirm links already emailed may still hold a phone. `Quote`/`RoomQuote` are similarly tagged (`AnyQuote`), and
 `OrderSummary`/`CheckoutForm` render either.
 
 **The URL is untrusted**, for both kinds. `/checkout` re-parses and re-prices

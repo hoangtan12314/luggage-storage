@@ -34,19 +34,17 @@ export async function createBooking(
 ): Promise<CreateBookingState> {
   const rawKind = formData.get("kind");
 
-  // Classes collect different contact details (phone OR WhatsApp), so they
-  // validate their own customer shape.
+  // Classes validate their own selection, but share the customer shape.
   if (rawKind === "class") {
     return createClassBooking(formData);
   }
 
   const kind = rawKind === "room" ? "room" : "luggage";
 
-  // Phone or WhatsApp, at least one — the owner reaches guests on WhatsApp.
+  // WhatsApp is required — the owner reaches guests there.
   const customerResult = classCustomerSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
-    phone: formData.get("phone"),
     whatsapp: formData.get("whatsapp"),
   });
 
@@ -227,7 +225,6 @@ async function createClassBooking(formData: FormData): Promise<CreateBookingStat
   const customerResult = classCustomerSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
-    phone: formData.get("phone"),
     whatsapp: formData.get("whatsapp"),
   });
 

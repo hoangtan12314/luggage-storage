@@ -51,7 +51,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     initialCreateBookingState
   );
 
-  const [values, setValues] = useState({ name: "", email: "", phone: "", whatsapp: "" });
+  const [values, setValues] = useState({ name: "", email: "", whatsapp: "" });
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
   const [attempts, setAttempts] = useState(0);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -61,16 +61,14 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     if (values.name.trim().length < 2) errors.name = "Please enter your full name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
       errors.email = "Please enter a valid email address.";
-    const phone = values.phone.trim();
     const whatsapp = values.whatsapp.trim();
-    const bad = (v: string) => !/^\+?[\d\s().-]{7,20}$/.test(v);
-    if (!phone && !whatsapp) errors.contact = "Please enter a phone number or a WhatsApp number.";
-    else if ((phone && bad(phone)) || (whatsapp && bad(whatsapp)))
-      errors.contact = "Please enter a valid number, with the country code if it’s not Vietnamese.";
+    if (!whatsapp) errors.contact = "Please enter your WhatsApp number.";
+    else if (!/^\+?[\d\s().-]{7,20}$/.test(whatsapp))
+      errors.contact = "Please enter a valid WhatsApp number, with its country code.";
     return errors;
   }, [values]);
 
-  const serverError = (key: string) => state.errors[key]?.[0];
+  const serverError = (key: string) => state.errors[key === "contact" ? "whatsapp" : key]?.[0];
   const errorFor = (key: FieldKey): string | undefined =>
     attempts > 0 || touched[key] ? (clientErrors[key] ?? serverError(key)) : undefined;
 
@@ -81,7 +79,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
   const selectionError = state.message;
   const hasSummary = fieldErrors.length > 0 || !!selectionError;
 
-  const set = (key: "name" | "email" | "phone" | "whatsapp") => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (key: "name" | "email") => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [key]: e.target.value }));
   const touch = (key: FieldKey) => setTouched((t) => ({ ...t, [key]: true }));
 
@@ -94,7 +92,6 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     for (const [name, value] of Object.entries(hidden)) data.set(name, value);
     data.set("name", values.name);
     data.set("email", values.email);
-    data.set("phone", values.phone);
     data.set("whatsapp", values.whatsapp);
     startTransition(() => formAction(data));
   }
@@ -147,7 +144,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
         </div>
 
         <RequestNotice title="You’re placing a request">
-          This isn’t a confirmed booking yet. We’ll contact you on WhatsApp (or by phone) at the number below to
+          This isn’t a confirmed booking yet. We’ll contact you on the WhatsApp number below to
           confirm, then email you to say we’ll see you soon. You pay on arrival.
         </RequestNotice>
 
@@ -182,31 +179,22 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
             );
           })}
 
-          <div className="space-y-3">
-            {(
-              [
-                { key: "phone", label: "Phone", auto: "tel" },
-                { key: "whatsapp", label: "WhatsApp", auto: "tel" },
-              ] as const
-            ).map(({ key, label, auto }) => (
-              <div key={key}>
-                <Label htmlFor={key === "phone" ? "checkout-contact" : `checkout-${key}`} className="text-cocoa">
-                  {label}
-                </Label>
-                <PhoneField
-                  id={key === "phone" ? "checkout-contact" : `checkout-${key}`}
-                  label={label}
-                  onChange={(full) => setValues((v) => ({ ...v, [key]: full }))}
-                  onBlur={() => touch("contact")}
-                  autoComplete={auto}
-                  invalid={!!contactError}
-                  describedBy="checkout-contact-help checkout-contact-error"
-                />
-              </div>
-            ))}
-            <p id="checkout-contact-help" className="text-cocoa-muted text-xs">
-              Enter at least one — a WhatsApp number is best, it’s how we’ll reach you. Pick the country code
-              before the number.
+          <div>
+            <Label htmlFor="checkout-contact" className="text-cocoa">
+              WhatsApp
+              <span className="text-cocoa-muted font-normal">(required)</span>
+            </Label>
+            <PhoneField
+              id="checkout-contact"
+              label="WhatsApp"
+              onChange={(full) => setValues((v) => ({ ...v, whatsapp: full }))}
+              onBlur={() => touch("contact")}
+              autoComplete="tel"
+              invalid={!!contactError}
+              describedBy="checkout-contact-help checkout-contact-error"
+            />
+            <p id="checkout-contact-help" className="text-cocoa-muted mt-1.5 text-xs">
+              Pick your country code first. We’ll message you on WhatsApp to confirm.
             </p>
             {contactError && (
               <p id="checkout-contact-error" className="text-destructive text-sm">

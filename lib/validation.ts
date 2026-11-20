@@ -93,18 +93,6 @@ export const roomSelectionSchema = z
 
 export type RoomSelectionInput = z.infer<typeof roomSelectionSchema>;
 
-export const customerSchema = z.object({
-  name: z.string().trim().min(2, "Enter your full name"),
-  email: z.email("Enter a valid email address"),
-  phone: z
-    .string()
-    .trim()
-    .min(7, "Enter a valid phone number")
-    .max(20, "Enter a valid phone number"),
-});
-
-export type CustomerInput = z.infer<typeof customerSchema>;
-
 /**
  * Class selection: which workshop, on which date, at which start time, for
  * how many people. Untrusted input like the other selection schemas — the
@@ -157,32 +145,20 @@ export type ClassSelectionInput = z.infer<typeof classSelectionSchema>;
 const phoneField = z
   .string()
   .trim()
-  .min(7, "Enter a valid number")
+  .min(7, "Enter your WhatsApp number")
   .max(20, "Enter a valid number")
   .regex(/^\+?[\d\s().-]+$/, "Enter a valid number");
 
-// An empty or missing input means "not provided", not "invalid".
-const optionalPhone = z.preprocess(
-  (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
-  phoneField.optional()
-);
-
 /**
- * Class guests may leave either phone or WhatsApp blank, but not both — the
- * owner needs some way to reach them. The group error lives on the
- * `contact` path so the form can show it once beside both fields.
+ * Every guest (luggage, room or class) gives a WhatsApp number — it's how the
+ * owner reaches them to confirm the request. The error sits on the `contact`
+ * path so the form can show it once beside the field.
  */
-export const classCustomerSchema = z
-  .object({
-    name: z.string().trim().min(2, "Enter your full name"),
-    email: z.email("Enter a valid email address"),
-    phone: optionalPhone,
-    whatsapp: optionalPhone,
-  })
-  .refine((val) => val.phone || val.whatsapp, {
-    message: "Enter a phone number or a WhatsApp number",
-    path: ["contact"],
-  });
+export const classCustomerSchema = z.object({
+  name: z.string().trim().min(2, "Enter your full name"),
+  email: z.email("Enter a valid email address"),
+  whatsapp: phoneField,
+});
 
 export type ClassCustomerInput = z.infer<typeof classCustomerSchema>;
 

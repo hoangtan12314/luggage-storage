@@ -82,7 +82,7 @@ export function buildBookingEmail(booking: Booking, confirmUrl?: string | null) 
           ["Duration", describeDuration(booking.start, booking.end)],
         ];
 
-  // Phone and WhatsApp are both optional for classes (at least one given).
+  // WhatsApp is required now; `phone` only exists on requests made before that change.
   const contactRows: [string, string][] = [];
   if (booking.customer.phone) contactRows.push(["Phone", booking.customer.phone]);
   if (booking.customer.whatsapp) contactRows.push(["WhatsApp", booking.customer.whatsapp]);
@@ -145,7 +145,7 @@ export function buildBookingEmail(booking: Booking, confirmUrl?: string | null) 
 
   const subject = `New ${kindLabel} request ${booking.ref} — ${formatVnd(booking.total)}`;
 
-  // The guest's WhatsApp number if they gave one, otherwise their phone.
+  // The guest's WhatsApp number (older requests may only have a phone).
   const whatsappTarget = booking.customer.whatsapp || booking.customer.phone || "";
   const whatsapp = whatsappTarget ? whatsappLink(whatsappTarget) : null;
 

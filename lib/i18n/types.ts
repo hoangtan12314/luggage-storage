@@ -198,7 +198,6 @@ export type ClassesCopy = {
     required: string;
     name: string;
     email: string;
-    phone: string;
     whatsapp: string;
     contactHelp: string;
     notes: string;

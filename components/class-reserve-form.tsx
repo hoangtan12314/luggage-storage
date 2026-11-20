@@ -62,7 +62,6 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -75,20 +74,15 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
     const e = copy.errors;
     if (name.trim().length < 2) errors.name = e.name;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = e.email;
-    const hasPhone = phone.trim() !== "";
-    const hasWhatsapp = whatsapp.trim() !== "";
-    if (!hasPhone && !hasWhatsapp) errors.contact = e.contact;
-    else {
-      const bad = (v: string) => !/^\+?[\d\s().-]{7,20}$/.test(v.trim());
-      if ((hasPhone && bad(phone)) || (hasWhatsapp && bad(whatsapp))) errors.contact = e.phone;
-    }
+    if (whatsapp.trim() === "") errors.contact = e.contact;
+    else if (!/^\+?[\d\s().-]{7,20}$/.test(whatsapp.trim())) errors.contact = e.phone;
     if (notes.trim().length > 500) errors.notes = e.notes;
     return errors;
-  }, [name, email, phone, whatsapp, notes, copy.errors]);
+  }, [name, email, whatsapp, notes, copy.errors]);
 
   // After a submit attempt every error shows; before that only fields the
   // guest has already left. Server errors fill any gaps.
-  const serverError = (key: string) => state.errors[key]?.[0];
+  const serverError = (key: string) => state.errors[key === "contact" ? "whatsapp" : key]?.[0];
   const errorFor = (key: FieldKey): string | undefined =>
     attempts > 0 || touched[key] ? (clientErrors[key] ?? serverError(key)) : undefined;
 
@@ -116,7 +110,6 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
     data.set("people", String(selection.people));
     data.set("name", name);
     data.set("email", email);
-    data.set("phone", phone);
     data.set("whatsapp", whatsapp);
     data.set("notes", notes);
     startTransition(() => formAction(data));
@@ -156,7 +149,7 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
                 {fieldErrors.map(({ key, message }) => (
                   <li key={key}>
                     <a
-                      href={`#reserve-${key === "contact" ? "phone" : key}`}
+                      href={`#reserve-${key === "contact" ? "whatsapp" : key}`}
                       className="text-destructive underline underline-offset-2"
                     >
                       {message}
@@ -214,29 +207,16 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
           </div>
 
           <div>
-            <Label htmlFor="reserve-phone" className="text-cocoa">
-              {copy.phone}
-            </Label>
-            <PhoneField
-              id="reserve-phone"
-              label={copy.phone}
-              onChange={setPhone}
-              onBlur={() => touch("contact")}
-              autoComplete="tel"
-              invalid={!!contactError}
-              describedBy="reserve-contact-help reserve-contact-error"
-            />
-          </div>
-          <div>
             <Label htmlFor="reserve-whatsapp" className="text-cocoa">
               {copy.whatsapp}
+              <span className="text-cocoa-muted font-normal">({copy.required})</span>
             </Label>
             <PhoneField
               id="reserve-whatsapp"
               label={copy.whatsapp}
               onChange={setWhatsapp}
               onBlur={() => touch("contact")}
-              autoComplete="off"
+              autoComplete="tel"
               invalid={!!contactError}
               describedBy="reserve-contact-help reserve-contact-error"
             />

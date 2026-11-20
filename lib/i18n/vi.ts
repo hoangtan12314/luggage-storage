@@ -33,7 +33,7 @@ export const vi: HomeCopy = {
     },
     {
       title: "Thanh toán không cần tài khoản",
-      body: "Chỉ cần họ tên, email và số điện thoại.",
+      body: "Chỉ cần họ tên, email và số WhatsApp.",
     },
     {
       title: "Nhận mã đặt chỗ",

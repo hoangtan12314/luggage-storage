@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { MeetingPoint } from "@/components/meeting-point";
+import { PhoneField } from "@/components/phone-field";
+import { RequestNotice } from "@/components/request-notice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -167,6 +169,10 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
           )}
         </div>
 
+        <div className="mb-6">
+          <RequestNotice title={copy.requestNotice.title}>{copy.requestNotice.body}</RequestNotice>
+        </div>
+
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Label htmlFor="reserve-name" className="text-cocoa">
@@ -211,34 +217,28 @@ export function ClassReserveForm({ copy, openInMaps, selection, summary }: Props
             <Label htmlFor="reserve-phone" className="text-cocoa">
               {copy.phone}
             </Label>
-            <Input
+            <PhoneField
               id="reserve-phone"
-              type="tel"
-              inputMode="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              label={copy.phone}
+              onChange={setPhone}
               onBlur={() => touch("contact")}
               autoComplete="tel"
-              aria-invalid={!!contactError || undefined}
-              aria-describedby="reserve-contact-help reserve-contact-error"
-              className={cn("mt-1.5", fieldClass)}
+              invalid={!!contactError}
+              describedBy="reserve-contact-help reserve-contact-error"
             />
           </div>
           <div>
             <Label htmlFor="reserve-whatsapp" className="text-cocoa">
               {copy.whatsapp}
             </Label>
-            <Input
+            <PhoneField
               id="reserve-whatsapp"
-              type="tel"
-              inputMode="tel"
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value)}
+              label={copy.whatsapp}
+              onChange={setWhatsapp}
               onBlur={() => touch("contact")}
               autoComplete="off"
-              aria-invalid={!!contactError || undefined}
-              aria-describedby="reserve-contact-help reserve-contact-error"
-              className={cn("mt-1.5", fieldClass)}
+              invalid={!!contactError}
+              describedBy="reserve-contact-help reserve-contact-error"
             />
           </div>
           <div className="-mt-2 sm:col-span-2">

@@ -186,10 +186,6 @@ export type ClassesCopy = {
     select: string;
     chooseTimeFirst: string;
     startTime: string;
-    seatsLeftOne: string;
-    seatsLeftMany: string;
-    full: string;
-    onlyLeft: string;
     noneTitle: string;
     noneHelp: string;
     errorText: string;
@@ -220,6 +216,8 @@ export type ClassesCopy = {
     };
     submit: string;
     submitting: string;
+    /** Box on the form: this is a request we confirm over WhatsApp, not a confirmed booking. */
+    requestNotice: { title: string; body: string };
     errors: {
       summaryTitle: string;
       name: string;
@@ -229,7 +227,6 @@ export type ClassesCopy = {
       notes: string;
     };
     invalid: { title: string; body: string; cta: string };
-    noSeats: string;
   };
 };
 

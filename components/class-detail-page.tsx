@@ -8,7 +8,7 @@ import { MeetingPoint } from "@/components/meeting-point";
 import { StickyBookBar } from "@/components/sticky-book-bar";
 import {
   CLASS_FACTS,
-  CLASS_SEATS_PER_SESSION,
+  MAX_PEOPLE_PER_BOOKING,
   getCampus,
   getMeetingAddress,
   LOCATION,
@@ -56,7 +56,7 @@ export async function ClassDetailPage({ type, locale }: { type: ClassType; local
     },
     {
       icon: Users,
-      label: fill(c.detail.facts.smallGroup, { n: CLASS_SEATS_PER_SESSION }),
+      label: fill(c.detail.facts.smallGroup, { n: MAX_PEOPLE_PER_BOOKING }),
     },
     {
       icon: CalendarCheck,

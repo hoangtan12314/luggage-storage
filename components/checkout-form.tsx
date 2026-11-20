@@ -9,12 +9,14 @@ import { formatVnd } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneField } from "@/components/phone-field";
 import { Label } from "@/components/ui/label";
+import { RequestNotice } from "@/components/request-notice";
 
 const fieldClass =
   "mt-1.5 h-11 rounded-xl border-cocoa/20 bg-white/80 px-3.5 text-base text-cocoa md:text-base";
 
-type FieldKey = "name" | "email" | "phone";
+type FieldKey = "name" | "email" | "contact";
 
 type CheckoutFormProps = {
   /**
@@ -49,7 +51,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     initialCreateBookingState
   );
 
-  const [values, setValues] = useState<Record<FieldKey, string>>({ name: "", email: "", phone: "" });
+  const [values, setValues] = useState({ name: "", email: "", phone: "", whatsapp: "" });
   const [touched, setTouched] = useState<Partial<Record<FieldKey, boolean>>>({});
   const [attempts, setAttempts] = useState(0);
   const summaryRef = useRef<HTMLDivElement>(null);
@@ -59,8 +61,12 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     if (values.name.trim().length < 2) errors.name = "Please enter your full name.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim()))
       errors.email = "Please enter a valid email address.";
-    if (!/^\+?[\d\s().-]{7,20}$/.test(values.phone.trim()))
-      errors.phone = "Please enter a valid phone number.";
+    const phone = values.phone.trim();
+    const whatsapp = values.whatsapp.trim();
+    const bad = (v: string) => !/^\+?[\d\s().-]{7,20}$/.test(v);
+    if (!phone && !whatsapp) errors.contact = "Please enter a phone number or a WhatsApp number.";
+    else if ((phone && bad(phone)) || (whatsapp && bad(whatsapp)))
+      errors.contact = "Please enter a valid number, with the country code if it’s not Vietnamese.";
     return errors;
   }, [values]);
 
@@ -75,7 +81,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
   const selectionError = state.message;
   const hasSummary = fieldErrors.length > 0 || !!selectionError;
 
-  const set = (key: FieldKey) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const set = (key: "name" | "email" | "phone" | "whatsapp") => (e: React.ChangeEvent<HTMLInputElement>) =>
     setValues((v) => ({ ...v, [key]: e.target.value }));
   const touch = (key: FieldKey) => setTouched((t) => ({ ...t, [key]: true }));
 
@@ -89,6 +95,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     data.set("name", values.name);
     data.set("email", values.email);
     data.set("phone", values.phone);
+    data.set("whatsapp", values.whatsapp);
     startTransition(() => formAction(data));
   }
 
@@ -99,11 +106,11 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempts, state]);
 
-  const fields: { key: FieldKey; label: string; type?: string; auto: string; inputMode?: "tel" }[] = [
+  const fields: { key: "name" | "email"; label: string; type?: string; auto: string }[] = [
     { key: "name", label: "Full name", auto: "name" },
     { key: "email", label: "Email", type: "email", auto: "email" },
-    { key: "phone", label: "Phone", type: "tel", auto: "tel", inputMode: "tel" },
   ];
+  const contactError = errorFor("contact");
 
   return (
     <form
@@ -139,9 +146,14 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
           )}
         </div>
 
-        <h2 className="font-display text-xl font-semibold tracking-tight text-cocoa">Your details</h2>
+        <RequestNotice title="You’re placing a request">
+          This isn’t a confirmed booking yet. We’ll contact you on WhatsApp (or by phone) at the number below to
+          confirm, then email you to say we’ll see you soon. You pay on arrival.
+        </RequestNotice>
+
+        <h2 className="font-display mt-6 text-xl font-semibold tracking-tight text-cocoa">Your details</h2>
         <div className="mt-5 space-y-5">
-          {fields.map(({ key, label, type, auto, inputMode }) => {
+          {fields.map(({ key, label, type, auto }) => {
             const error = errorFor(key);
             return (
               <div key={key}>
@@ -152,7 +164,6 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
                 <Input
                   id={`checkout-${key}`}
                   type={type}
-                  inputMode={inputMode}
                   value={values[key]}
                   onChange={set(key)}
                   onBlur={() => touch(key)}
@@ -170,6 +181,39 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
               </div>
             );
           })}
+
+          <div className="space-y-3">
+            {(
+              [
+                { key: "phone", label: "Phone", auto: "tel" },
+                { key: "whatsapp", label: "WhatsApp", auto: "tel" },
+              ] as const
+            ).map(({ key, label, auto }) => (
+              <div key={key}>
+                <Label htmlFor={key === "phone" ? "checkout-contact" : `checkout-${key}`} className="text-cocoa">
+                  {label}
+                </Label>
+                <PhoneField
+                  id={key === "phone" ? "checkout-contact" : `checkout-${key}`}
+                  label={label}
+                  onChange={(full) => setValues((v) => ({ ...v, [key]: full }))}
+                  onBlur={() => touch("contact")}
+                  autoComplete={auto}
+                  invalid={!!contactError}
+                  describedBy="checkout-contact-help checkout-contact-error"
+                />
+              </div>
+            ))}
+            <p id="checkout-contact-help" className="text-cocoa-muted text-xs">
+              Enter at least one — a WhatsApp number is best, it’s how we’ll reach you. Pick the country code
+              before the number.
+            </p>
+            {contactError && (
+              <p id="checkout-contact-error" className="text-destructive text-sm">
+                {contactError}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -185,7 +229,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
             </Link>
           </div>
           <div className="mt-3">{summary}</div>
-          <p className="text-cocoa-muted mt-3 text-xs">Pay on arrival — no payment is taken online.</p>
+          <p className="text-cocoa-muted mt-3 text-xs">Pay on arrival — nothing is charged online.</p>
         </div>
 
         <Button
@@ -197,7 +241,7 @@ export function CheckoutForm({ hidden, total, disabled, summary, backHref }: Che
             "Processing…"
           ) : (
             <>
-              Reserve — pay {formatVnd(total)} on arrival
+              Send request — pay {formatVnd(total)} on arrival
               <ArrowRight aria-hidden className="size-5" />
             </>
           )}

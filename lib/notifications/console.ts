@@ -1,4 +1,4 @@
-import { buildBookingEmail } from "./template";
+import { buildBookingEmail, buildCustomerConfirmationEmail } from "./template";
 import type { NotificationProvider, NotifyResult } from "./provider";
 
 /**
@@ -7,10 +7,18 @@ import type { NotificationProvider, NotifyResult } from "./provider";
  * and the booking flow is fully testable before signing up for Resend.
  */
 export const consoleNotificationProvider: NotificationProvider = {
-  async notifyNewBooking(booking): Promise<NotifyResult> {
-    const { subject, text } = buildBookingEmail(booking);
+  async notifyNewBooking(booking, confirmUrl): Promise<NotifyResult> {
+    const { subject, text } = buildBookingEmail(booking, confirmUrl);
     console.log(
       `[notifications] RESEND_API_KEY not set — logging instead of sending.\nSubject: ${subject}\n${text}`
+    );
+    return { ok: true };
+  },
+
+  async sendCustomerConfirmation(booking): Promise<NotifyResult> {
+    const { subject, text } = buildCustomerConfirmationEmail(booking);
+    console.log(
+      `[notifications] RESEND_API_KEY not set — would email ${booking.customer.email}.\nSubject: ${subject}\n${text}`
     );
     return { ok: true };
   },

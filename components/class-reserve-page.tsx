@@ -3,7 +3,6 @@ import { ArrowLeft } from "lucide-react";
 import { ClassReserveForm } from "@/components/class-reserve-form";
 import { getCampus, getMeetingAddress, getWorkshop } from "@/lib/config";
 import { formatHours } from "@/lib/class-format";
-import { countSeatsAvailable } from "@/lib/data/bookings";
 import { classesCopy } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { quoteClass } from "@/lib/pricing";
@@ -17,7 +16,7 @@ const first = (value: string | string[] | undefined) =>
 /**
  * The reservation form page, reached from "Select" on a class page. The
  * selection travels in the query string, which is untrusted: it is re-parsed
- * with the same schema the server action uses, and the seats are re-checked,
+ * with the same schema the server action uses,
  * so a stale or tampered link lands on a "choose again" message instead of a
  * form that cannot succeed.
  */
@@ -54,20 +53,6 @@ export async function ClassReservePage({
 
   const { date, time, people } = parsed.data;
   const changeHref = `${base}/classes/${workshop.icon}`;
-
-  const seatsLeft = await countSeatsAvailable(workshop.icon, date, time);
-  if (seatsLeft < people) {
-    return (
-      <Shell>
-        <Notice
-          title={c.reserve.invalid.title}
-          body={c.reserve.noSeats.replace("{n}", String(seatsLeft))}
-          cta={c.reserve.invalid.cta}
-          href={changeHref}
-        />
-      </Shell>
-    );
-  }
 
   const priced = quoteClass(workshop, date, time, people);
   const dateLabel = new Date(`${date}T00:00:00Z`).toLocaleDateString(

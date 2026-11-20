@@ -2,11 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getSizeConfig, getWorkshop, ROOM } from "./config";
+import { getSizeConfig, getWorkshop, ROOM, SITE_URL } from "./config";
+import { signBookingToken } from "./confirm-token";
 import {
   countAvailable,
   countRoomsAvailable,
-  countSeatsAvailable,
   createBooking as createBookingRecord,
 } from "./data/bookings";
 import { notificationProvider } from "./notifications";
@@ -14,10 +14,9 @@ import { paymentProvider } from "./payments";
 import { quote, quoteClass, quoteRoom, InvalidRangeError } from "./pricing";
 import { generateRef } from "./reference";
 import {
-  classCustomerSchema,
   classNotesSchema,
   classSelectionSchema,
-  customerSchema,
+  classCustomerSchema,
   roomSelectionSchema,
   selectionSchema,
 } from "./validation";
@@ -43,10 +42,12 @@ export async function createBooking(
 
   const kind = rawKind === "room" ? "room" : "luggage";
 
-  const customerResult = customerSchema.safeParse({
+  // Phone or WhatsApp, at least one — the owner reaches guests on WhatsApp.
+  const customerResult = classCustomerSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
     phone: formData.get("phone"),
+    whatsapp: formData.get("whatsapp"),
   });
 
   if (kind === "room") {
@@ -55,7 +56,7 @@ export async function createBooking(
   return createLuggageBooking(formData, customerResult);
 }
 
-type CustomerResult = ReturnType<typeof customerSchema.safeParse>;
+type CustomerResult = ReturnType<typeof classCustomerSchema.safeParse>;
 
 async function createLuggageBooking(
   formData: FormData,
@@ -136,8 +137,7 @@ async function createLuggageBooking(
     transactionId: charge.transactionId,
   });
 
-  await notify(booking);
-  redirect(`/booking/${ref}`);
+  return finish(booking);
 }
 
 async function createRoomBooking(
@@ -214,8 +214,7 @@ async function createRoomBooking(
     transactionId: charge.transactionId,
   });
 
-  await notify(booking);
-  redirect(`/booking/${ref}`);
+  return finish(booking);
 }
 
 async function createClassBooking(formData: FormData): Promise<CreateBookingState> {
@@ -263,19 +262,6 @@ async function createClassBooking(formData: FormData): Promise<CreateBookingStat
   // would be ignored.
   const priced = quoteClass(workshop, date, time, people);
 
-  // Authoritative seat check — seats may have gone since the form rendered.
-  // The pool is per class type + date + time, shared by the type's options.
-  const available = await countSeatsAvailable(workshop.icon, date, time);
-  if (available < people) {
-    return {
-      errors: {},
-      message:
-        available === 0
-          ? `Sorry, ${workshop.name} at ${time} on ${date} is fully booked. Please choose another time or date.`
-          : `Only ${available} seat${available > 1 ? "s" : ""} left for ${workshop.name} at ${time} on ${date}. Please reduce the number of people.`,
-    };
-  }
-
   const ref = generateRef();
   const charge = await paymentProvider.charge(priced.total, priced.currency, ref);
 
@@ -299,21 +285,29 @@ async function createClassBooking(formData: FormData): Promise<CreateBookingStat
     transactionId: charge.transactionId,
   });
 
-  await notify(booking);
-  redirect(`/booking/${ref}`);
+  return finish(booking);
 }
 
-// Best-effort: the booking is already charged and saved by the time this
-// runs, so a broken notification must never fail the checkout. Awaited (not
-// fire-and-forget) because Server Action work left unawaited can be torn
-// down once the response starts, especially on serverless deploys.
-async function notify(booking: Awaited<ReturnType<typeof createBookingRecord>>) {
+/**
+ * Tells the owner about the new request (with a signed confirm link), then
+ * sends the guest to their "request received" page. The same signed token goes
+ * in that page's URL so it renders without a database lookup.
+ *
+ * Notification is best-effort: the request is already saved by now, so a
+ * broken email must never fail the guest's submit. Awaited (not
+ * fire-and-forget) because Server Action work left unawaited can be torn down
+ * once the response starts, especially on serverless deploys.
+ */
+async function finish(booking: Awaited<ReturnType<typeof createBookingRecord>>): Promise<never> {
+  const token = signBookingToken(booking);
+  const confirmUrl = token ? `${SITE_URL}/confirm/${token}` : null;
   try {
-    const notified = await notificationProvider.notifyNewBooking(booking);
+    const notified = await notificationProvider.notifyNewBooking(booking, confirmUrl);
     if (!notified.ok) {
       console.error("Booking notification failed:", notified.error);
     }
   } catch (err) {
     console.error("Booking notification threw:", err);
   }
+  redirect(token ? `/booking/${booking.ref}?t=${token}` : `/booking/${booking.ref}`);
 }

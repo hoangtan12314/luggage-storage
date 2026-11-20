@@ -1,5 +1,4 @@
-import { CLASS_SEATS_PER_SESSION, getSizeConfig, getWorkshop, ROOM } from "../config";
-import type { ClassTypeSlug } from "../config";
+import { getSizeConfig, ROOM } from "../config";
 import type { Booking, LockerSize } from "../types";
 
 // A plain module-level Map would be wiped on every dev HMR reload (each edit
@@ -109,29 +108,4 @@ export async function countRoomsAvailable(
   const overlapping = await findOverlappingRooms(checkIn, checkOut);
   const taken = overlapping.reduce((n, b) => n + (b.roomQuantity ?? 0), 0);
   return Math.max(0, ROOM.inventory - taken);
-}
-
-/**
- * Seats still free for one class session: one class *type* on one date at one
- * start time. The options of a type (e.g. "Coffee & Bánh Mì" and "4 Types
- * Coffee & Bánh Mì") run at the same table, so they share a single pool.
- *
- * Sums `people` across matching bookings rather than counting rows — one
- * booking can hold several guests, so counting rows would oversell.
- */
-export async function countSeatsAvailable(
-  typeSlug: ClassTypeSlug,
-  date: string,
-  time: string
-): Promise<number> {
-  const taken = Array.from(bookings().values())
-    .filter(
-      (b) =>
-        b.kind === "class" &&
-        b.start === date &&
-        b.classTime === time &&
-        getWorkshop(b.workshopId ?? "")?.icon === typeSlug
-    )
-    .reduce((n, b) => n + (b.people ?? 0), 0);
-  return Math.max(0, CLASS_SEATS_PER_SESSION - taken);
 }

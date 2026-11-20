@@ -235,7 +235,7 @@ export type Workshop = {
   /**
    * Which class *type* this workshop belongs to ("coffee", "cocoa",
    * "spring-roll"). Workshops with the same value are the options of one
-   * class page, and they share one pool of seats per date + time.
+   * class page.
    */
   icon: "coffee" | "cocoa" | "spring-roll";
 
@@ -254,11 +254,10 @@ export type Workshop = {
 };
 
 /**
- * Seats per class session. A session is one class *type* on one date at one
- * start time; every booking for any option of that type draws from the same
- * pool (see countSeatsAvailable in lib/data/bookings.ts).
+ * Most guests in a single class booking. There is no limit on how many
+ * bookings a start time takes — the owner confirms each request by hand.
  */
-export const CLASS_SEATS_PER_SESSION = 5;
+export const MAX_PEOPLE_PER_BOOKING = 5;
 
 /**
  * Facts shown on every class page. TODO: free cancellation and the languages
@@ -405,13 +404,24 @@ export const WORKSHOPS: Workshop[] = [
     meetingPoint: CLASS_MEETING_POINT,
   },
   {
+    id: "spring-roll-fresh",
+    name: "Fresh Spring Roll",
+    pricePerPerson: 499_000,
+    availableTimes: ["17:00"],
+    durationHours: 1.5,
+    icon: "spring-roll",
+    highlights: SPRING_ROLL_HIGHLIGHTS,
+    description: SPRING_ROLL_DESCRIPTION,
+    includes: SPRING_ROLL_INCLUDES,
+    meetingPoint: CLASS_MEETING_POINT,
+  },
+  {
     id: "spring-roll",
     name: "Fresh & Fried Spring Roll",
-    pricePerPerson: 499_000,
+    pricePerPerson: 899_000,
     availableTimes: ["17:00"],
     durationHours: 2.5,
     icon: "spring-roll",
-
     highlights: SPRING_ROLL_HIGHLIGHTS,
     description: SPRING_ROLL_DESCRIPTION,
     includes: SPRING_ROLL_INCLUDES,

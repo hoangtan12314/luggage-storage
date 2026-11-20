@@ -86,6 +86,31 @@ it, and `createBooking` independently re-validates, re-prices and re-checks
 availability before persisting. A tampered `price=` in the query string can
 never affect the stored total. Keep it that way when adding a third service.
 
+### Requests, not bookings — the owner confirms (all three kinds)
+
+A guest submitting checkout/reserve is sending a **request**; nothing is confirmed
+until the owner agrees it with them (usually on WhatsApp). The flow:
+
+1. The form shows a `RequestNotice` box ("You're placing a request … we'll contact you on
+   WhatsApp to confirm, then email you") and the button says "Send request".
+2. `createBooking` saves it and calls `finish()` (`lib/actions.ts`): emails the owner
+   a **request** email with a WhatsApp link (`wa.me`) and a **"Confirm & email the guest"**
+   link, then redirects the guest to `/booking/[ref]?t=<token>` ("Request received").
+3. The owner opens the link → `/confirm/[token]` (noindex) shows the request and a
+   Confirm button (a POST — opening the link alone never confirms, so mail scanners can't
+   trigger it). `confirmBooking` (`lib/confirm-actions.ts`) emails the guest "you're
+   confirmed, see you soon" (`buildCustomerConfirmationEmail`, reply-to = NOTIFY_EMAIL).
+
+**No database involved:** the link and the request page carry the booking itself in an
+HMAC-signed token (`lib/confirm-token.ts`), so they work on serverless where the
+in-memory store isn't shared. There is no confirmed/pending status stored, so pressing
+Confirm twice emails the guest twice (the page warns). Env vars: `BOOKING_CONFIRM_SECRET`
+(required in production — without it no confirm link is made; dev uses a fixed fallback),
+`EMAIL_FROM` (e.g. `Ngõ Saigon <bookings@ngosaigon.com>`, needs ngosaigon.com verified in
+Resend — Resend's test sender can only email the account owner), `NOTIFY_EMAIL`,
+`NEXT_PUBLIC_SITE_URL` (the confirm link is built from it). When testing locally run with
+`RESEND_API_KEY=` empty so emails are logged, not sent.
+
 ### Payments — checkout is a reservation, not a charge
 
 The business collects payment in person, not online. `lib/payments/` (a mock
@@ -147,7 +172,7 @@ Consequences when adding routes:
   constants live in `lib/booking-form-state.ts` for exactly this reason. The file
   now has two internal branches (`createLuggageBooking`, `createRoomBooking`) —
   neither is exported, only the top-level `createBooking` is.
-- **`countAvailable`/`countRoomsAvailable`/`countSeatsAvailable` sum quantities
+- **`countAvailable`/`countRoomsAvailable` sum quantities
   (`people` for classes), they do not count booking rows.** One booking can hold three lockers or three rooms. Counting
   rows silently oversells. `countRoomsAvailable` must also exclude cancelled
   bookings if a cancellation status is ever added — it doesn't exist yet, so
@@ -179,16 +204,15 @@ Consequences when adding routes:
   (`/rooms/opengraph-image-l7yu9j`, not `/rooms/opengraph-image`) — check the
   build's route list rather than guessing the URL when testing one directly.
 
-- **Class seats are 5 per class *type* + date + time** (`CLASS_SEATS_PER_SESSION`),
-  shared by the type's options (e.g. "Coffee & Bánh Mì" and "4 Types Coffee &
-  Bánh Mì" draw from one pool). The type is `Workshop.icon`; `CLASS_TYPES` groups
-  `WORKSHOPS` by it, so adding a workshop with an existing `icon` makes it another
-  option of that class page.
+- **Classes have no seat limit.** Every start time is always open; the owner confirms each
+  request by hand. Only a single booking is capped (`MAX_PEOPLE_PER_BOOKING` = 5). The type
+  is `Workshop.icon`; `CLASS_TYPES` groups `WORKSHOPS` by it, so adding a workshop with an
+  existing `icon` makes it another option of that class page.
 - **`/classes` and `/classes/[type]` are statically generated**, so "tomorrow"
   must never be computed during render: `AvailabilityCard` reads it on the client
   via `useSyncExternalStore` (empty on the server). The server action re-checks
   with `classDateBounds()` in the shop's timezone. `/classes/reserve` is dynamic
-  (it reads the query string) and re-validates + re-checks seats at render.
+  (it reads the query string) and re-validates at render.
 - **The class reserve form dispatches `createBooking` manually**
   (`startTransition(() => formAction(data))`), not via `<form action>`: React
   resets a form after its action runs, which would wipe everything typed
@@ -218,11 +242,10 @@ Consequences when adding routes:
   logo + "Since 2021", campus cards, social pills, and the © line.
 - **Workshops** (`WORKSHOPS` in `lib/config.ts`): the owner's real data (names,
   prices, times, **durations** — 1 h for the standard coffee/cocoa classes, 3 h
-  for the "4 Types" ones, 2.5 h for spring roll — highlights, description,
+  for the "4 Types" ones, 1.5 h for the plain spring roll (499,000 ₫) and 2.5 h for fresh & fried (899,000 ₫) — highlights, description,
   includes, meeting point). A class page shows one duration, or a range ("1–3
   hours") when its options differ; each option card shows its own. Heads-up: the
-  3-hour classes' start times (every 2 h) overlap, but seats are only pooled per
-  type + date + time, not across overlapping sessions. Still to confirm:
+  3-hour classes' start times (every 2 h) overlap, which is fine as there is no seat limit. Still to confirm:
   `CLASS_FACTS` (free cancellation 24 h) and the instructor languages were copied
   from the owner's GetYourGuide *spring-roll* listing and applied to every class;
   the Vietnamese class text in `lib/i18n/class-content.ts` is a draft translation

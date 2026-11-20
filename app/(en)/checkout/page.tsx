@@ -144,10 +144,10 @@ export default async function CheckoutPage(props: PageProps<"/checkout">) {
           Back
         </Link>
         <h1 className="font-display text-3xl font-semibold tracking-tight text-cocoa lg:text-4xl">
-          Checkout
+          Your request
         </h1>
         <p className="text-cocoa-muted mt-2 mb-8 text-lg">
-          Guest checkout — no account needed. Pay when you arrive.
+          Send us your request — no account needed. We’ll confirm with you, and you pay when you arrive.
         </p>
 
         <CheckoutForm

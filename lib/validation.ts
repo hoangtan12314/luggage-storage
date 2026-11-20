@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { classDateBounds } from "./class-dates";
-import { CLASS_SEATS_PER_SESSION, getSizeConfig, getWorkshop, ROOM } from "./config";
+import { MAX_PEOPLE_PER_BOOKING, getSizeConfig, getWorkshop, ROOM } from "./config";
 import type { BookingItem } from "./types";
 
 export const lockerSizeSchema = z.enum(["small", "large"]);
@@ -120,7 +120,7 @@ export const classSelectionSchema = z
       .number()
       .int()
       .min(1, "Choose at least 1 person")
-      .max(CLASS_SEATS_PER_SESSION, `At most ${CLASS_SEATS_PER_SESSION} people per booking`),
+      .max(MAX_PEOPLE_PER_BOOKING, `At most ${MAX_PEOPLE_PER_BOOKING} people per booking`),
   })
   .superRefine((val, ctx) => {
     const workshop = getWorkshop(val.workshopId);

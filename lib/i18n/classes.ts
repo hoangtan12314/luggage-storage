@@ -73,10 +73,6 @@ const en: ClassesCopy = {
     select: "Select",
     chooseTimeFirst: "Pick a time",
     startTime: "Start time",
-    seatsLeftOne: "1 seat left",
-    seatsLeftMany: "{n} seats left",
-    full: "Full",
-    onlyLeft: "Only {n} left",
     noneTitle: "No availability for {guests} on {date}",
     noneHelp:
       "Try another date or fewer guests — or call us on {phone} and we will help you find a spot.",
@@ -106,8 +102,12 @@ const en: ClassesCopy = {
       payOnArrival: "Pay on arrival — nothing is charged online.",
       meetingPoint: "Meeting point",
     },
-    submit: "Reserve — pay {total} on arrival",
-    submitting: "Reserving…",
+    submit: "Send request — pay {total} on arrival",
+    submitting: "Sending…",
+    requestNotice: {
+      title: "You’re placing a request",
+      body: "This isn’t a confirmed booking yet. We’ll contact you on WhatsApp to confirm your class, then email you to say we’ll see you soon. You pay on arrival.",
+    },
     errors: {
       summaryTitle: "Please fix these before reserving",
       name: "Enter your full name",
@@ -121,7 +121,6 @@ const en: ClassesCopy = {
       body: "Please choose your class, date and time again.",
       cta: "Back to the classes",
     },
-    noSeats: "Only {n} seats are left for this session. Please change your selection.",
   },
 };
 
@@ -198,10 +197,6 @@ const vi: ClassesCopy = {
     select: "Chọn",
     chooseTimeFirst: "Chọn giờ",
     startTime: "Giờ bắt đầu",
-    seatsLeftOne: "Còn 1 chỗ",
-    seatsLeftMany: "Còn {n} chỗ",
-    full: "Hết chỗ",
-    onlyLeft: "Chỉ còn {n} chỗ",
     noneTitle: "Không còn chỗ cho {guests} vào {date}",
     noneHelp:
       "Hãy thử ngày khác hoặc ít khách hơn — hoặc gọi cho chúng tôi theo số {phone} để được giúp tìm chỗ.",
@@ -231,8 +226,12 @@ const vi: ClassesCopy = {
       payOnArrival: "Thanh toán khi đến — không thu tiền trực tuyến.",
       meetingPoint: "Điểm hẹn",
     },
-    submit: "Đặt chỗ — thanh toán {total} khi đến",
-    submitting: "Đang đặt chỗ…",
+    submit: "Gửi yêu cầu — thanh toán {total} khi đến",
+    submitting: "Đang gửi…",
+    requestNotice: {
+      title: "Bạn đang gửi một yêu cầu đặt chỗ",
+      body: "Đây chưa phải là đặt chỗ đã được xác nhận. Chúng tôi sẽ liên hệ qua WhatsApp để xác nhận lớp học của bạn, sau đó gửi email báo hẹn gặp lại. Bạn thanh toán khi đến.",
+    },
     errors: {
       summaryTitle: "Vui lòng sửa các mục sau trước khi đặt chỗ",
       name: "Nhập họ và tên của bạn",
@@ -246,7 +245,6 @@ const vi: ClassesCopy = {
       body: "Vui lòng chọn lại lớp học, ngày và giờ.",
       cta: "Quay lại các lớp học",
     },
-    noSeats: "Buổi học này chỉ còn {n} chỗ. Vui lòng thay đổi lựa chọn.",
   },
 };
 

@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
       ],
       // Checkout and booking confirmation carry guest personal details and
       // must never be crawled — see the noindex meta on those pages too.
-      disallow: ["/checkout", "/booking/", "/classes/reserve", "/vi/classes/reserve"],
+      disallow: ["/checkout", "/booking/", "/confirm/", "/classes/reserve", "/vi/classes/reserve"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

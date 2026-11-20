@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getClassAvailability } from "@/lib/class-actions";
 import { classDateBounds } from "@/lib/class-dates";
-import { CLASS_SEATS_PER_SESSION } from "@/lib/config";
+import { MAX_PEOPLE_PER_BOOKING } from "@/lib/config";
 import type { ClassesCopy, Locale } from "@/lib/i18n";
 import { formatVnd } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,7 @@ type Props = {
 type Check =
   | { key: string; state: "loading" }
   | { key: string; state: "error" }
-  | { key: string; state: "ready"; seats: Record<string, number> };
+  | { key: string; state: "ready"; times: string[] };
 
 const fill = (template: string, values: Record<string, string | number>) =>
   Object.entries(values).reduce(
@@ -54,7 +54,7 @@ const fill = (template: string, values: Record<string, string | number>) =>
  * Results are keyed by type + date + guests. When the guest changes the date
  * or the number of guests the key no longer matches, so the card returns to
  * its idle state instead of showing options that were checked for something
- * else. Availability is advisory: createBooking re-checks seats on submit.
+ * else.
  */
 export function AvailabilityCard({
   typeSlug,
@@ -117,7 +117,7 @@ export function AvailabilityCard({
     const forKey = key;
     setCheck({ key: forKey, state: "loading" });
     getClassAvailability(typeSlug, date)
-      .then((seats) => setCheck({ key: forKey, state: "ready", seats }))
+      .then((times) => setCheck({ key: forKey, state: "ready", times }))
       .catch(() => setCheck({ key: forKey, state: "error" }));
   }
 
@@ -132,10 +132,8 @@ export function AvailabilityCard({
   const guestsLabel =
     people === 1 ? copy.guestsOne : fill(copy.guestsMany, { n: people });
 
-  const seats = current?.state === "ready" ? current.seats : null;
-  const anyAvailable =
-    !!seats &&
-    options.some((o) => o.availableTimes.some((t) => (seats[t] ?? 0) >= people));
+  const times = current?.state === "ready" ? current.times : null;
+  const anyAvailable = !!times && options.some((o) => o.availableTimes.some((t) => times.includes(t)));
 
   function select() {
     if (!chosen) return;
@@ -188,8 +186,8 @@ export function AvailabilityCard({
               type="button"
               variant="outline"
               aria-label={copy.addGuest}
-              onClick={() => setPeople((p) => Math.min(CLASS_SEATS_PER_SESSION, p + 1))}
-              disabled={people >= CLASS_SEATS_PER_SESSION}
+              onClick={() => setPeople((p) => Math.min(MAX_PEOPLE_PER_BOOKING, p + 1))}
+              disabled={people >= MAX_PEOPLE_PER_BOOKING}
               className="size-11 cursor-pointer rounded-full"
             >
               <Plus className="size-4" />
@@ -260,7 +258,7 @@ export function AvailabilityCard({
           </div>
         )}
 
-        {seats && !anyAvailable && (
+        {times && !anyAvailable && (
           <div className="rounded-2xl border border-cocoa/15 bg-white/60 p-4 text-sm">
             <SearchX aria-hidden className="text-cocoa-muted mb-2 size-6" />
             <p className="font-semibold text-cocoa">
@@ -270,7 +268,7 @@ export function AvailabilityCard({
           </div>
         )}
 
-        {seats && anyAvailable && (
+        {times && anyAvailable && (
           <>
             <h3 className="font-display text-lg font-semibold tracking-tight text-cocoa">
               {copy.chooseOption}
@@ -314,35 +312,20 @@ export function AvailabilityCard({
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {option.availableTimes.map((time) => {
-                        const left = seats[time] ?? 0;
-                        const enough = left >= people;
                         const checked = isChosen && chosen?.time === time;
-                        const note =
-                          left === 0
-                            ? copy.full
-                            : !enough
-                              ? fill(copy.onlyLeft, { n: left })
-                              : left === 1
-                                ? copy.seatsLeftOne
-                                : fill(copy.seatsLeftMany, { n: left });
                         return (
-                          <label
-                            key={time}
-                            className={cn("relative", enough ? "cursor-pointer" : "cursor-not-allowed")}
-                          >
+                          <label key={time} className="relative cursor-pointer">
                             <input
                               type="radio"
                               name="class-slot"
                               value={`${option.id}|${time}`}
                               checked={checked}
-                              disabled={!enough}
                               onChange={() => setChosen({ key, optionId: option.id, time })}
                               className="peer sr-only"
                             />
-                            <span className="peer-focus-visible:ring-ring/60 peer-checked:border-gold peer-checked:bg-gold/25 flex min-h-14 min-w-20 flex-col items-center justify-center rounded-xl border border-cocoa/25 bg-white/80 px-2.5 py-1.5 text-cocoa transition-colors duration-200 peer-focus-visible:ring-3 peer-disabled:opacity-50 hover:bg-white">
+                            <span className="peer-focus-visible:ring-ring/60 peer-checked:border-gold peer-checked:bg-gold/25 flex min-h-11 min-w-20 flex-col items-center justify-center rounded-xl border border-cocoa/25 bg-white/80 px-2.5 py-1.5 text-cocoa transition-colors duration-200 peer-focus-visible:ring-3 hover:bg-white">
                               <span className="text-base font-semibold tabular-nums">{time}</span>
-                              <span className="text-cocoa-muted text-[11px] leading-tight">{note}</span>
-                            </span>
+                                                          </span>
                           </label>
                         );
                       })}
